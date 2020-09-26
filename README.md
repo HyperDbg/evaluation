@@ -1,2 +1,2 @@
 # eval-engine
-The evaluator engine of HyperDbg
+The expression evaluator engine of HyperDbg
