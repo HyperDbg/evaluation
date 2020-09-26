@@ -17,7 +17,7 @@
 #include <string.h>
 #include <iostream>
 #include <Windows.h>
-#include "HyperDbgJSONWrapper.h"
+#include "JsonWrapper.h"
 using namespace std;
 
 #pragma warning(disable : 4996)

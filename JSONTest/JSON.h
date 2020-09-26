@@ -34,6 +34,7 @@ VOID AddString(JSON_OBJECT* Obj, const wchar_t* Name, CHAR* x);
 VOID AddWstring(JSON_OBJECT* Obj, const wchar_t* Name, wchar_t* x);
 wchar_t* getString(JSON_OBJECT* Obj);
 VOID Close(JSON_OBJECT* Obj);
+VOID Open(JSON_OBJECT* Obj);
 
 
 #endif

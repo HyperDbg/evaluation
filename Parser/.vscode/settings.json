@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "xstring": "c",
+        "cstdlib": "cpp",
+        "stack": "cpp"
+    }
+}

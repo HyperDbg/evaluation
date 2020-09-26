@@ -1,0 +1,21 @@
+#include <stdio.h>      // printf()
+#include <stdlib.h>     // malloc()
+#include <string.h>     // strcpy()
+
+int main()
+{
+    char* example = malloc(100);
+    strcpy(example,"Hello ");
+
+
+    for(int i = 0; i < 10; i++)
+    {
+        strcat(example, "Iran , USA, Russia, Arabia, China");
+        printf("%d\n", i);
+    }
+
+    
+    printf("%d\n",strlen(example));
+    printf("%s\n", example);
+    return 0;
+}

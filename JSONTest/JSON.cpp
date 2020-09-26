@@ -10,7 +10,7 @@
  * @copyright This project is released under the GNU Public License v3.
  * 
  */
-#include "JSON.h"
+#include "Json.h"
 #include <wchar.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -36,7 +36,7 @@ VOID CreateJsonString(JSON_OBJECT* Obj, INT MaxSize)
 VOID AddInt32(JSON_OBJECT* Obj, const wchar_t* Name, INT32 x)
 {
     
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": %d\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": %d\n},\n", Name, x);
     Obj->Pointer += Len;
     Obj->Capacity -= Len;
 }
@@ -47,7 +47,7 @@ VOID AddInt32(JSON_OBJECT* Obj, const wchar_t* Name, INT32 x)
  */
 VOID AddUint32(JSON_OBJECT* Obj, const wchar_t* Name, UINT32 x)
 {
-    int Len = swprintf(Obj->Pointer, Obj->Capacity,L"{\n\t\"%s\": %u\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity,L"\t\"%s\": %u\n", Name, x);
     Obj->Pointer += Len;
     Obj->Capacity -= Len;
 }
@@ -58,7 +58,7 @@ VOID AddUint32(JSON_OBJECT* Obj, const wchar_t* Name, UINT32 x)
  */
 VOID AddInt64(JSON_OBJECT* Obj, const wchar_t* Name, INT64 x)
 {
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": %lld\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": %lld\n", Name, x);
     Obj->Pointer += Len;
     Obj->Capacity -= Len;
 }
@@ -69,7 +69,7 @@ VOID AddInt64(JSON_OBJECT* Obj, const wchar_t* Name, INT64 x)
  */
 VOID AddUint64(JSON_OBJECT* Obj, const wchar_t* Name, UINT64 x)
 {
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": %llu\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": %llu\n", Name, x);
     Obj->Pointer += Len;
     Obj->Capacity -= Len;
 }
@@ -80,7 +80,7 @@ VOID AddUint64(JSON_OBJECT* Obj, const wchar_t* Name, UINT64 x)
  */
 VOID AddDouble(JSON_OBJECT* Obj, const wchar_t* Name, DOUBLE x)
 {
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": %lf\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": %lf\n", Name, x);
     Obj->Pointer += Len; 
     Obj->Capacity -= Len;
 }
@@ -91,7 +91,7 @@ VOID AddDouble(JSON_OBJECT* Obj, const wchar_t* Name, DOUBLE x)
  */
 VOID AddFloat(JSON_OBJECT* Obj, const wchar_t* Name, FLOAT x)
 {
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": %f\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": %f\n", Name, x);
     Obj->Pointer += Len;
 }
 
@@ -106,7 +106,7 @@ VOID AddString(JSON_OBJECT* Obj, const wchar_t* Name, CHAR* x)
     wchar_t* Wstring = (wchar_t*)malloc(StringLen*2+2);
     size_t WstringLen;
     mbstowcs_s(&WstringLen, Wstring, StringLen+1, x, StringLen);
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": \"%s\"\n},\n", Name, Wstring);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": \"%s\"\n", Name, Wstring);
     Obj->Pointer += Len;
     Obj->Capacity -= Len;
     free(Wstring);
@@ -118,7 +118,7 @@ VOID AddString(JSON_OBJECT* Obj, const wchar_t* Name, CHAR* x)
  */
 VOID AddWstring(JSON_OBJECT* Obj, const wchar_t* Name, wchar_t* x)
 {
-    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n\t\"%s\": \"%s\"\n},\n", Name, x);
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"\t\"%s\": \"%s\"\n", Name, x);
     Obj->Pointer += Len;
     Obj->Capacity -= Len;
 }
@@ -139,6 +139,18 @@ wchar_t* getString(JSON_OBJECT* Obj)
  */
 VOID Close(JSON_OBJECT* Obj)
 {
-    Obj->Pointer-= sizeof(wchar_t); 
-    *Obj->Pointer = 0;
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"}\n");
+    Obj->Pointer += Len;
+    Obj->Capacity -= Len;
+}
+
+/**
+ * @brief Opens Obj
+ *
+ */
+VOID Open(JSON_OBJECT* Obj)
+{
+    int Len = swprintf(Obj->Pointer, Obj->Capacity, L"{\n");
+    Obj->Pointer += Len;
+    Obj->Capacity -= Len;
 }
