@@ -10,6 +10,8 @@ typedef enum TOKEN_TYPE
     DECIMAL,
     FLOAT,
     HEX,
+    OCTAL,
+    BINARY,
     SPECIAL_TOKEN,
     KEYWORD,
     WHITE_SPACE,
@@ -40,10 +42,11 @@ TOKEN_LIST Push(TOKEN_LIST TokenList, TOKEN Token);
 void Append(TOKEN Token, char c);
 TOKEN GetToken(char* c, FILE *f);
 TOKEN_LIST Scan(FILE* f);
-char IsHexChar(char c);
-char IsDecimalChar(char c);
+char IsHex(char c);
+char IsDecimal(char c);
 char IsLetter(char c);
 char IsBinary(char c);
+char IsOctal(char c);
 
 
 #endif

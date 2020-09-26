@@ -120,6 +120,12 @@ void PrintToken(TOKEN Token)
     case HEX:
         printf(" HEX>\n");
         break;
+    case OCTAL:
+        printf(" OCTAL>\n");
+        break;
+    case BINARY:
+        printf(" BINARY>\n");
+        break;
     case SPECIAL_TOKEN:
         printf(" SPECIAL_TOKEN>\n");
         break;
@@ -314,36 +320,44 @@ TOKEN GetToken(char *c, FILE *f)
         Token->Type = SPECIAL_TOKEN;
         *c = fgetc(f);
         return Token;
+    case '|':
+        strcpy(Token->Value, "|");
+        Token->Type = SPECIAL_TOKEN;
+        *c = fgetc(f);
+        return Token;
     case '@':
         *c = fgetc(f);
         if (IsLetter(*c))
         {
-            Append(Token, *c);
-            do
+            while (IsLetter(*c) || IsDecimal(*c))
             {
-                *c = fgetc(f);
                 Append(Token, *c);
-            } while (IsLetter(*c) || );
-
+                *c = fgetc(f);
+            }
             Token->Type = REGISTER;
-            *c = fgetc(f);
             return Token;
         }
 
     case '$':
-       *c = fgetc(f);
+        *c = fgetc(f);
         if (IsLetter(*c))
         {
-            Append(Token, *c);
-            do
+            while (IsLetter(*c) || IsDecimal(*c))
             {
-                *c = fgetc(f);
                 Append(Token, *c);
-            } while (IsLetter(*c));
-
+                *c = fgetc(f);
+            }
             Token->Type = PSEUDO_REGISTER;
-            *c = fgetc(f);
             return Token;
+        }
+
+    case '.':
+        *c = fgetc(f);
+        if (IsHex(*c))
+        {
+        }
+        else
+        {
         }
 
     case ' ':
@@ -364,39 +378,109 @@ TOKEN GetToken(char *c, FILE *f)
         if (*c == 'x')
         {
             *c = fgetc(f);
-            do
+            while (IsHex(*c) || *c == '`')
             {
-                Append(Token, *c);
+                if (*c != '`')
+                    Append(Token, *c);
                 *c = fgetc(f);
-            } while (IsHexChar(*c));
+            }
             Token->Type = HEX;
             return Token;
         }
-        else if (IsHexChar(*c))
+        else if (*c == 'o')
+        {
+            *c = fgetc(f);
+            while (IsOctal(*c) || *c == '`')
+            {
+                if (*c != '`')
+                    Append(Token, *c);
+                *c = fgetc(f);
+            }
+            Token->Type = OCTAL;
+            return Token;
+        }
+        else if (*c == 'n')
+        {
+            *c = fgetc(f);
+            while (IsDecimal(*c) || *c == '`')
+            {
+                if (*c != '`')
+                    Append(Token, *c);
+                *c = fgetc(f);
+            }
+            Token->Type = DECIMAL;
+            return Token;
+        }
+        else if (*c == 'y')
+        {
+            *c = fgetc(f);
+            while (IsBinary(*c) || *c == '`')
+            {
+                if (*c != '`')
+                    Append(Token, *c);
+                *c = fgetc(f);
+            }
+            Token->Type = BINARY;
+            return Token;
+        }
+
+        else if (IsHex(*c))
         {
             do
             {
-                Append(Token, *c);
+                if (*c != '`')
+                    Append(Token, *c);
                 *c = fgetc(f);
-            } while (IsHexChar(*c));
-            Token->Type = HEX;
+            } while (IsHex(*c) || *c == '`');
+            if (*c == '.')
+            {
+                Append(Token, *c);
+                *c = getc(f);
+                do
+                {
+                    if (*c != '`')
+                        Append(Token, *c);
+                    *c = fgetc(f);
+                } while (IsHex(*c) || *c == '`');
+
+                Token->Type = FLOAT;
+                return Token;
+            }
+            else
+            {
+                Token->Type = HEX;
+                return Token;
+            }
+        }
+        else if (*c == '.')
+        {
+            Append(Token, *c);
+            *c = getc(f);
+            do
+            {
+                if (*c != '`')
+                    Append(Token, *c);
+                *c = fgetc(f);
+            } while (IsHex(*c) || *c == '`');
+
+            Token->Type = FLOAT;
             return Token;
         }
         else
         {
-            Token->Type = UNKNOWN;
+            strcpy(Token->Value, "0");
+            Token->Type = HEX;
             return Token;
         }
 
     default:
         if (IsLetter(*c) || *c == '_')
         {
-
-            do
+            while (IsLetter(*c) || *c == '_' || IsDecimal(*c))
             {
                 Append(Token, *c);
                 *c = fgetc(f);
-            } while (IsLetter(*c) || *c == '_' || IsDecimalChar(*c));
+            }
 
             if (WaitForID)
             {
@@ -410,13 +494,14 @@ TOKEN GetToken(char *c, FILE *f)
 
             return Token;
         }
-        else if (IsHexChar(*c) && !WaitForID)
+        else if (IsHex(*c))
         {
             do
             {
-                Append(Token, *c);
+                if (*c != '`')
+                    Append(Token, *c);
                 *c = fgetc(f);
-            } while (IsHexChar(*c));
+            } while (IsHex(*c) || *c == '`');
             Token->Type = HEX;
             return Token;
         }
@@ -448,14 +533,14 @@ TOKEN_LIST Scan(FILE *f)
     return TokenList;
 }
 
-char IsHexChar(char c)
+char IsHex(char c)
 {
     if ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))
         return 1;
     else
         return 0;
 }
-char IsDecimalChar(char c)
+char IsDecimal(char c)
 {
     if (c >= '0' && c <= '9')
         return 1;
@@ -471,7 +556,7 @@ char IsLetter(char c)
         return 0;
     }
 }
-char IsBianry(char c)
+char IsBinary(char c)
 {
     if (c == '0' || c == '1')
         return 1;
@@ -479,4 +564,11 @@ char IsBianry(char c)
     {
         return 0;
     }
+}
+char IsOctal(char c)
+{
+    if (c >= '0' && c <= '7')
+        return 1;
+    else
+        return 0;
 }
