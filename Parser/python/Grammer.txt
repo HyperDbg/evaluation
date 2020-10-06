@@ -1,8 +1,8 @@
 S->C ; S'
 S'->C ; S'
 S'->eps
-C->id = E0
-
+C->_id = E0
+#
 E0->E1 E0'
 E0'->| E1 @OR E0'
 E0'->eps
@@ -60,8 +60,16 @@ E10->low ( E0 @LOW )
 
 E10->( E0 )
 
-E10->@PUSH reg 
-E10->@PUSH num 
+E10->@PUSH _register
+
+# numbers 
+E10->@PUSH _hex
+E10->@PUSH _decimal
+E10->@PUSH _float
+E10->@PUSH _octal
+E10->@PUSH _binary
+
+
 E10->@PUSH func
-E10->@PUSH preg
+E10->@PUSH _pseudo_register
 

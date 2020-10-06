@@ -9,12 +9,15 @@ void Parse(FILE *f)
 {
     TOKEN_LIST Stack = NewTokenList();
     TOKEN_LIST MatchedStack = NewTokenList();
+    
     TOKEN CurrentIn;
     TOKEN TopToken;
 
     int NonTerminalId;
     int TerminalId;
     int RuleId;
+    char c;
+    char t;
 
     //
     // End of File Token
@@ -35,13 +38,24 @@ void Parse(FILE *f)
 
     
     
+    c = fgetc(f);
+    CurrentIn = Scan(f, &c);
     
-    CurrentIn = Scan(f);
 
     do
     {
         
         TopToken = Pop(Stack);
+        // if (TopToken->Type == END_OF_STACK)
+        // {
+        //     if(CurrentIn->Type!= END_OF_STACK)
+        //     {   
+        //         printf("1) Error!");
+        //     }
+        //     break;
+        // }
+      
+
 
         printf("\nTop Token :\n");
         PrintToken(TopToken);
@@ -81,17 +95,6 @@ void Parse(FILE *f)
 
                 if (Token->Type == EPSILON)
                     break;
-                // printf("rhs[%d] = %s\n", i, Rhs[RuleId][i]);
-                if(Token->Type == NON_TERMINAL)
-                {
-                }
-                else if(Token->Type == SEMANTIC_RULE)
-                {
-                }
-                else
-                {
-                }
-
                 Push(Stack, Token);
 
                
@@ -102,28 +105,44 @@ void Parse(FILE *f)
         }
         else if (TopToken->Type == SEMANTIC_RULE)
         {
-
-        }
-        else 
-        {
-            if (!IsEqual(TopToken, CurrentIn)) // TODO : Compeletly Check Check(Token1, Token2)
+            if(!strcmp(TopToken->Value, "@PUSH"))
             {
-                printf("error\n");
+                TopToken = Pop(Stack);
+                Push(MatchedStack, CurrentIn);
+                CurrentIn = Scan(f, &c);
+                
+                // char t = getchar();
             }
             else
             {
-                CurrentIn = Scan(f);
-                printf("match\n");
+                Push(MatchedStack, TopToken);
+            }
+            
+        }
+        else 
+        {
+            if (!IsEqual(TopToken, CurrentIn)) 
+            {
+                printf("Error: Not Matched\n");
+                return;
+            }
+            else
+            {
+                CurrentIn = Scan(f, &c);
+                printf("matched...\n");
+                
             }
             
             
         }
-        PrintTokenList(Stack);
-        printf("\n");
+        // PrintTokenList(Stack);
+        // printf("\n");
         
-        char c = getchar();
+        
 
     } while (TopToken->Type != END_OF_STACK);
+
+    PrintTokenList(MatchedStack);
 }
 
 char IsNoneTerminal(TOKEN Token)
@@ -159,17 +178,60 @@ int GetTerminalId(TOKEN Token)
     {
         if (Token->Type == HEX ) // TODO : Chack All Cases for this function
         {
-            if(!strcmp("num", TerminalMap[i]))
+            if(!strcmp("_hex", TerminalMap[i]))
                 return i;
         }
         else if(Token->Type == ID)
         {
-            if(!strcmp("id", TerminalMap[i]))
+            if(!strcmp("_id", TerminalMap[i]))
             {
                 return i;
             }
         }
-        else 
+        else if(Token->Type == REGISTER)
+        {
+            if(!strcmp("_register", TerminalMap[i]))
+            {
+                return i;
+            }
+        }
+        else if(Token->Type == PSEUDO_REGISTER)
+        {
+            if(!strcmp("_pseudo_register", TerminalMap[i]))
+            {
+                return i;
+            }
+        }
+        else if(Token->Type == DECIMAL)
+        {
+            if(!strcmp("_decimal", TerminalMap[i]))
+            {
+                return i;
+            }
+        }
+        else if(Token->Type == FLOAT)
+        {
+            if(!strcmp("_float", TerminalMap[i]))
+            {
+                return i;
+            }
+        }
+        else if(Token->Type == BINARY)
+        {
+            if(!strcmp("_binary", TerminalMap[i]))
+            {
+                return i;
+            }
+        }
+        else if(Token->Type == OCTAL)
+        {
+            if(!strcmp("_octal", TerminalMap[i]))
+            {
+                return i;
+            }
+        }
+       
+        else // Keyword
         {
             if(!strcmp(Token->Value, TerminalMap[i]))
                 return i;

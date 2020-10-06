@@ -16,11 +16,11 @@ typedef enum TOKEN_TYPE
     KEYWORD,
     WHITE_SPACE,
     COMMENT,
-    REGISTER, 
+    REGISTER,
     PSEUDO_REGISTER,
 
     NON_TERMINAL,
-    SEMANTIC_RULE, 
+    SEMANTIC_RULE,
     END_OF_STACK,
     EPSILON,
     UNKNOWN
@@ -32,14 +32,14 @@ struct _TOKEN
     char *Value;
 };
 
-typedef struct _TOKEN* TOKEN;
+typedef struct _TOKEN *TOKEN;
 
 typedef struct _TOKEN_LIST
 {
-    TOKEN* Head;
+    TOKEN *Head;
     unsigned int Pointer;
     unsigned int Size;
-} *TOKEN_LIST;
+} * TOKEN_LIST;
 
 TOKEN NewToken(void);
 TOKEN_LIST NewTokenList(void);
@@ -49,13 +49,12 @@ TOKEN_LIST Push(TOKEN_LIST TokenList, TOKEN Token);
 TOKEN Pop(TOKEN_LIST TokenList);
 TOKEN Top(TOKEN_LIST TokenList);
 void Append(TOKEN Token, char c);
-TOKEN GetToken(char* c, FILE *f);
-TOKEN Scan(FILE* f);
+TOKEN GetToken(char *c, FILE *f);
+TOKEN Scan(FILE *f, char* c);
 char IsHex(char c);
 char IsDecimal(char c);
 char IsLetter(char c);
 char IsBinary(char c);
 char IsOctal(char c);
-
 
 #endif

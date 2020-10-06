@@ -26,6 +26,8 @@ class Parser:
         self.maximum_rhs_len = 0
 
 
+        self.SPECIAL_TOKENS = ['++', '+=', '+', '--', '-=', '-', '*=', "*", "/=", "/", "=", ",", ";", "(", ")", "{", "}", "|", ">>", "<<", "&", "^"]
+
         self.first_dict = dict()
         self.follow_dict = dict()
 
@@ -145,12 +147,13 @@ class Parser:
         counter = 0
         for line in self.grammer_file:
             line = line.strip()
-            if line == "":
+            if line == "" or line[0] == "#":
                 continue
             l = line.split("->")
             lhs = l[0]
             self.nonterminal_set.add(lhs)
             self.lhs_list.append(lhs)
+
 
             rhs = l[1].split(" ")
             self.rhs_list.append(rhs)
@@ -195,18 +198,16 @@ class Parser:
             return "NON_TERMINAL"
         elif self.isSemanticRule(var):
             return "SEMANTIC_RULE"
-        elif var == "id":
-            return "ID"
-        elif var == "num":
-            return "HEX"
 
         elif var == "eps":
             return "EPSILON"
-        # TODO: Handle All Cases
-        elif var in ['++', '+=', '+', '--', '-=', '-', '*=', "*", "/=", "/", "=", ",", ";", "(", ")", "{", "}", "|"]:
-                return "SPECIAL_TOKEN"
+
+        elif var in self.SPECIAL_TOKENS:
+            return "SPECIAL_TOKEN"
+        elif var[0] == "_":
+            return var[1:].upper()
         else:
-            return "UNKNOWN"
+            return "KEYWORD"
 
 
     def write_rhs_list(self):
@@ -538,7 +539,7 @@ class Parser:
 
 parser = Parser()
 parser.run()
-tokens = ['id', '=', 'num',  ';', '$']
+tokens = ['_id', '=', '_hex',  ';', '$']
 parser.parse(tokens)
 
 

@@ -268,6 +268,36 @@ TOKEN GetToken(char *c, FILE *f)
             Token->Type = SPECIAL_TOKEN;
             return Token;
         }
+    case '>':
+        *c = fgetc(f);
+        if (*c == '>')
+        {
+            strcpy(Token->Value, ">>");
+            Token->Type = SPECIAL_TOKEN;
+            *c = fgetc(f);
+            return Token;
+        }
+        else
+        {
+            strcpy(Token->Value, ">");
+            Token->Type = SPECIAL_TOKEN;
+            return Token;
+        }
+    case '<':
+        *c = fgetc(f);
+        if (*c == '<')
+        {
+            strcpy(Token->Value, "<<");
+            Token->Type = SPECIAL_TOKEN;
+            *c = fgetc(f);
+            return Token;
+        }
+        else
+        {
+            strcpy(Token->Value, "<");
+            Token->Type = SPECIAL_TOKEN;
+            return Token;
+        }
     case '/':
         *c = fgetc(f);
         if (*c == '=')
@@ -366,6 +396,16 @@ TOKEN GetToken(char *c, FILE *f)
         return Token;
     case '|':
         strcpy(Token->Value, "|");
+        Token->Type = SPECIAL_TOKEN;
+        *c = fgetc(f);
+        return Token;
+    case '&':
+        strcpy(Token->Value, "&");
+        Token->Type = SPECIAL_TOKEN;
+        *c = fgetc(f);
+        return Token;
+    case '^':
+        strcpy(Token->Value, "^");
         Token->Type = SPECIAL_TOKEN;
         *c = fgetc(f);
         return Token;
@@ -559,30 +599,27 @@ TOKEN GetToken(char *c, FILE *f)
 /**
  * 
  */
-TOKEN Scan(FILE* f)
+TOKEN Scan(FILE* f, char* c)
 {
-    char c = fgetc(f);
     TOKEN Token = NewToken();
 
     while (1)
     {
-        Token = GetToken(&c, f);
-        if (c == EOF)
+       
+       
+        Token = GetToken(c, f);
+        if (*c == EOF)
         {
             Token->Type = END_OF_STACK;
             strcpy(Token->Value,"$");
             return Token;
         }            
             
-        else if (Token->Type == WHITE_SPACE)
+        else if (Token->Type == WHITE_SPACE || Token->Type == COMMENT)
         {
             continue;
         }  
-        else 
-        {
-            return Token;
-        }
-        //
+        return Token;
     }
 }
 
