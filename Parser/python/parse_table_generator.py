@@ -1,9 +1,23 @@
 import re
 
+# Util functions 
+def get_top(l):
+    return l[len(l)-1]
+
+def read(tokens):
+    x = tokens[0]
+    tokens = tokens[1:]
+    return tokens, x 
+
+
+
+
+
+
 class Parser:
     def __init__(self):
         self.grammer_file = open("Grammer.txt", "r")
-        self.output_file = open("parse_table.h", "w")
+        self.output_file = open("..\src\parse_table.h", "w")
         self.rhs_list = []
         self.lhs_list = []
         self.terminal_set = set()
@@ -40,12 +54,14 @@ class Parser:
         self.fill_parse_table()
         print("Parse Table:")
         self.print_parse_table()
+        print()
         
 
         self.output_file.write("#ifndef PARSE_TABLE_H\n")
         self.output_file.write("#define PARSE_TABLE_H\n")
+        self.output_file.write("#include \"scanner.h\"\n")
         self.output_file.write("#define RULES_COUNT " + str(len(self.lhs_list)) + "\n")
-        self.output_file.write("#define TERMINALS_COUNT " + str(len(list(self.terminal_set))) + "\n")
+        self.output_file.write("#define TERMINAL_COUNT " + str(len(list(self.terminal_set))) + "\n")
         self.output_file.write("#define NONETERMINAL_COUNT " + str(len(list(self.nonterminal_list))) + "\n")
         self.output_file.write("#define START_VARIABLE " + "\"" + self.start +"\"\n")
         self.output_file.write("#define MAX_RHS_LEN "  + str(self.maximum_rhs_len) +"\n")
@@ -53,6 +69,7 @@ class Parser:
 
         self.write_lhs_list()
         self.write_rhs_list()
+        self.write_rhs_size()
         self.write_noneterminal_list()
         self.write_terminal_list()
         self.write_parse_table()
@@ -60,17 +77,67 @@ class Parser:
 
         self.output_file.write("#endif\n")
 
-        # for var in list(terminal_set):
-            # print("first(", var, ")",end=": ")
-            # print(first(var, lhs_list, rhs_list))
-            # print("follow(", var, ")",end=": ")
-            # print(follow(var, lhs_list, rhs_list))
-
-        
-
-
         self.grammer_file.close()
         self.output_file.close()
+
+
+    def parse(self, tokens):
+        stack = []
+        matched_stack = []
+        stack.append("$")
+        stack.append(self.start)
+        top = ""
+        tokens, current_in = read(tokens)
+        while top != "$":
+            top = get_top(stack)
+            
+            if self.isNoneTerminal(top):
+                id = self.parse_table[self.get_noneterminal_id(top)][self.get_terminal_id(current_in)]
+
+                # Error Handling 
+                if id == -1: 
+                    print("1)Error in input!")
+                    exit()
+
+                stack.pop()
+                
+
+                rhs = self.rhs_list[id]
+                if rhs != ["eps"]:
+                    for symbol in reversed(rhs):
+                        stack.append(symbol)
+
+                
+            elif self.isSemanticRule(top):
+                # TODO: Handle Semantic rules
+                if top == "@PUSH":
+                    stack.pop()
+                    top = get_top(stack)
+                    if top == current_in:
+                        matched_stack.append(top)
+                        current_in = tokens[0]
+                        tokens = tokens[1:]
+                    else: 
+                        print("2)Error in input!")
+                        exit()
+                        
+                else:
+                    matched_stack.append(top)
+                # print("matched stack :", end ="")
+                # print(matched_stack)
+
+
+                stack.pop()
+            else: # Terminal 
+                # TODO: Handle Error 
+                current_in = tokens[0]
+                if (len(tokens) > 1):
+                    tokens = tokens[1:]
+                stack.pop()
+            # print(top)
+
+
+        print(matched_stack)
 
             
     def read_grammer(self):
@@ -113,20 +180,37 @@ class Parser:
 
     def write_lhs_list(self):
 
-        self.output_file.write("const char* Lhs[RULES_COUNT]= \n{\n")
+        self.output_file.write("const struct _TOKEN Lhs[RULES_COUNT]= \n{\n")
         counter = 0
         for lhs in self.lhs_list:
             if counter == len(self.lhs_list)-1:
-                self.output_file.write("\"" + lhs + "\"" + "\n")
+                self.output_file.write("\t{NON_TERMINAL, " + "\"" + lhs + "\"}" + "\n")
             else:
-                self.output_file.write("\"" + lhs + "\"" + ",\n")
+                self.output_file.write("\t{NON_TERMINAL, " + "\"" + lhs + "\"}" + ",\n")
             counter +=1
         self.output_file.write("};\n")
 
+    def get_type(self,var):
+        if self.isNoneTerminal(var):
+            return "NON_TERMINAL"
+        elif self.isSemanticRule(var):
+            return "SEMANTIC_RULE"
+        elif var == "id":
+            return "ID"
+        elif var == "num":
+            return "HEX"
+
+        elif var == "eps":
+            return "EPSILON"
+        # TODO: Handle All Cases
+        elif var in ['++', '+=', '+', '--', '-=', '-', '*=', "*", "/=", "/", "=", ",", ";", "(", ")", "{", "}", "|"]:
+                return "SPECIAL_TOKEN"
+        else:
+            return "UNKNOWN"
 
 
     def write_rhs_list(self):
-        self.output_file.write("char* Rhs[RULES_COUNT][MAX_RHS_LEN]= \n{\n")
+        self.output_file.write("const struct _TOKEN Rhs[RULES_COUNT][MAX_RHS_LEN]= \n{\n")
         counter =0
         for rhs in self.rhs_list:
             self.output_file.write("\t{")
@@ -134,9 +218,9 @@ class Parser:
             c = 0
             for var in rhs:
                 if c == len(rhs) -1:
-                    self.output_file.write("\"" + var + "\"" )
+                    self.output_file.write("{"+self.get_type(var) +", "+"\"" + var + "\"}" )
                 else:
-                    self.output_file.write("\"" + var + "\"," )
+                    self.output_file.write("{"+self.get_type(var) +", "+"\"" + var + "\"}," )
                 c += 1
 
             if counter == len(self.rhs_list)-1:
@@ -147,8 +231,20 @@ class Parser:
 
         self.output_file.write("};\n")
 
+    def write_rhs_size(self):
+        self.output_file.write("const unsigned int RhsSize[RULES_COUNT]= \n{\n")
+        counter =0
+        for rhs in self.rhs_list:            
+            if counter == len(self.rhs_list)-1:
+               self.output_file.write( str(len(rhs)) + "\n" )
+            else:
+                self.output_file.write( str(len(rhs)) + ",\n" )
+            counter+= 1
+
+        self.output_file.write("};\n")
+
     def write_terminal_list(self):
-        self.output_file.write("const char* TerminalMap[TERMINALS_COUNT]= \n{\n")
+        self.output_file.write("const char* TerminalMap[TERMINAL_COUNT]= \n{\n")
         counter = 0
         for x in self.terminal_list:
             if counter == len(self.terminal_list)-1:
@@ -170,7 +266,7 @@ class Parser:
         self.output_file.write("};\n")
 
     def write_parse_table(self):
-        self.output_file.write("const int ParseTable[NONETERMINAL_COUNT][TERMINALS_COUNT]= \n{\n")
+        self.output_file.write("const int ParseTable[NONETERMINAL_COUNT][TERMINAL_COUNT]= \n{\n")
         i = 0
         for x in self.nonterminal_list:
             j = 0
@@ -235,12 +331,18 @@ class Parser:
         for id in self.first_dict:
             print(id, end=": ")
             for x in self.first_dict[id]:
-                print(x,end = ", ")
+                print(x,end = " ")
             print()
 
     def get_noneterminal_id(self, nonterminal):
         for i in range(len(self.nonterminal_list)):
             if nonterminal == self.nonterminal_list[i]:
+                return i
+
+        return -1
+    def get_terminal_id(self, terminal):
+        for i in range(len(self.terminal_list)):
+            if terminal == self.terminal_list[i]:
                 return i
 
         return -1
@@ -322,7 +424,7 @@ class Parser:
         for key in self.predict_dict:
             print(key, end=": ")
             for x in self.predict_dict[key]:
-                print(x,end = ", ")
+                print(x,end = " ")
             print()
 
 
@@ -354,7 +456,8 @@ class Parser:
                         
                         
                         else:
-                            next_var = rhs[p+1]
+
+                            next_var = self.get_next_var(rhs, p)
                             if self.isNoneTerminal(next_var):
                                 self.follow_dict[symbol] = self.follow_dict[symbol].union(self.first_dict[next_var])
                                 if self.isnullable(next_var):    
@@ -365,12 +468,13 @@ class Parser:
                                 self.follow_dict[symbol].add(next_var)
                         
                         if p == len(rhs)-2:
-                            next_var = rhs[p+1]
+                            next_var = self.get_next_var(rhs, p)
                             
                             if self.isnullable(next_var):
                                 self.follow_dict[symbol] = self.follow_dict[symbol].union(self.follow_dict[lhs])
-                                self.follow_dict[next_var] = self.follow_dict[next_var].union(self.follow_dict[lhs])
-                                
+                                self.follow_dict[lhs] = self.follow_dict[lhs].union(self.follow_dict[next_var])
+                        
+                   
 
                         if temp != self.follow_dict[symbol]:
                             updated = True
@@ -380,12 +484,20 @@ class Parser:
 
             if not updated: 
                 break
-
+    def get_next_var(self, rhs, p):
+        if p == len(rhs)-1:
+            return None
+        
+        x = p +1
+        while self.isSemanticRule(rhs[x]):
+            x+=1
+        return rhs[x]
+        
     def print_follows(self):
         for key in self.follow_dict:
             print(key, end=": ")
             for x in self.follow_dict[key]:
-                print(x,end = ", ")
+                print(x,end = " ")
             print()
 
     def isNoneTerminal(self,x):     
@@ -426,3 +538,9 @@ class Parser:
 
 parser = Parser()
 parser.run()
+tokens = ['id', '=', 'num',  ';', '$']
+parser.parse(tokens)
+
+
+
+

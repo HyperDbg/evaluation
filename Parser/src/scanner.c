@@ -81,6 +81,36 @@ TOKEN_LIST Push(TOKEN_LIST TokenList, TOKEN Token)
 /**
  * 
  */
+ 
+TOKEN Pop(TOKEN_LIST TokenList)
+{
+    //
+    // Calculate address to read most recent token
+    //
+    if (TokenList->Pointer > 0)
+        TokenList->Pointer--;
+    uintptr_t Head = (uintptr_t)TokenList->Head;
+    uintptr_t Pointer = (uintptr_t)TokenList->Pointer;
+    TOKEN *ReadAddr = (TOKEN *)(Head + Pointer * sizeof(TOKEN));
+
+    
+    return *ReadAddr;
+}
+
+TOKEN Top(TOKEN_LIST TokenList)
+{
+    //
+    // Calculate address to read most recent token
+    //
+    uintptr_t Head = (uintptr_t)TokenList->Head;
+    uintptr_t Pointer = (uintptr_t)TokenList->Pointer-1;
+    TOKEN *ReadAddr = (TOKEN *)(Head + Pointer * sizeof(TOKEN));
+
+    return *ReadAddr;
+}
+/**
+ * 
+ */
 void PrintTokenList(TOKEN_LIST TokenList)
 {
     TOKEN Token = NewToken();
@@ -144,8 +174,22 @@ void PrintToken(TOKEN Token)
     case PSEUDO_REGISTER:
         printf(" PSEUDO_REGISTER>\n");
         break;
+    case SEMANTIC_RULE:
+        printf(" SEMANTIC_RULE>\n");
+        break;
+    case NON_TERMINAL:
+        printf(" NON_TERMINAL>\n");
+        break;
+    case END_OF_STACK:
+        printf(" END_OF_STACK>\n");
+        break;
     case UNKNOWN:
         printf(" UNKNOWN>\n");
+        break;
+
+    default:
+        printf(" ERROR>\n");
+        break;
     }
 }
 /**
@@ -515,22 +559,31 @@ TOKEN GetToken(char *c, FILE *f)
 /**
  * 
  */
-TOKEN_LIST Scan(FILE *f)
+TOKEN Scan(FILE* f)
 {
-    char c;
-    TOKEN Token;
-    TOKEN_LIST TokenList = NewTokenList();
-    c = fgetc(f);
+    char c = fgetc(f);
+    TOKEN Token = NewToken();
+
     while (1)
     {
-
         Token = GetToken(&c, f);
-        Push(TokenList, Token);
         if (c == EOF)
-            break;
+        {
+            Token->Type = END_OF_STACK;
+            strcpy(Token->Value,"$");
+            return Token;
+        }            
+            
+        else if (Token->Type == WHITE_SPACE)
+        {
+            continue;
+        }  
+        else 
+        {
+            return Token;
+        }
         //
     }
-    return TokenList;
 }
 
 char IsHex(char c)
