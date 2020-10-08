@@ -2,6 +2,7 @@
 #define SCANNER_H
 #include <stdio.h>
 
+//#define SCRIPTENGINE_EXPORTS
 #define TOKEN_VALUE_MAX_LEN 100
 #define TOKEN_LIST_INIT_SIZE 16
 typedef enum TOKEN_TYPE
@@ -49,12 +50,14 @@ TOKEN_LIST Push(TOKEN_LIST TokenList, TOKEN Token);
 TOKEN Pop(TOKEN_LIST TokenList);
 TOKEN Top(TOKEN_LIST TokenList);
 void Append(TOKEN Token, char c);
-TOKEN GetToken(char *c, FILE *f);
-TOKEN Scan(FILE *f, char* c);
+TOKEN GetToken(char *c, char* str);
+TOKEN Scan(char* str, char* c);
 char IsHex(char c);
 char IsDecimal(char c);
 char IsLetter(char c);
 char IsBinary(char c);
 char IsOctal(char c);
+
+char sgetc(char* str);
 
 #endif

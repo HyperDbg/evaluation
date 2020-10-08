@@ -1,15 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser.h"
+#include "ScriptEngine.h"
 #include "scanner.h"
 #include "parse_table.h"
 
-void Parse(FILE *f)
+
+
+void Parse(char* str)
 {
     TOKEN_LIST Stack = NewTokenList();
     TOKEN_LIST MatchedStack = NewTokenList();
-    
+
     TOKEN CurrentIn;
     TOKEN TopToken;
 
@@ -18,6 +20,8 @@ void Parse(FILE *f)
     int RuleId;
     char c;
     char t;
+
+    
 
     //
     // End of File Token
@@ -36,25 +40,18 @@ void Parse(FILE *f)
     Push(Stack, EndToken);
     Push(Stack, StartToken);
 
+
     
-    
-    c = fgetc(f);
-    CurrentIn = Scan(f, &c);
-    
+    c = sgetc(str);
+    CurrentIn = Scan(str, &c);
+   
+
 
     do
     {
-        
+
         TopToken = Pop(Stack);
-        // if (TopToken->Type == END_OF_STACK)
-        // {
-        //     if(CurrentIn->Type!= END_OF_STACK)
-        //     {   
-        //         printf("1) Error!");
-        //     }
-        //     break;
-        // }
-      
+
 
 
         printf("\nTop Token :\n");
@@ -62,8 +59,8 @@ void Parse(FILE *f)
         printf("\nCurrent Input :\n");
         PrintToken(CurrentIn);
         printf("\n");
-        
-        if(TopToken->Type == NON_TERMINAL)
+
+        if (TopToken->Type == NON_TERMINAL)
         {
             NonTerminalId = GetNonTerminalId(TopToken);
             if (NonTerminalId == -1)
@@ -78,17 +75,17 @@ void Parse(FILE *f)
                 return;
             }
             RuleId = ParseTable[NonTerminalId][TerminalId];
-            if(RuleId == -1)
+            if (RuleId == -1)
             {
                 printf("Error in Parse Table\n");
                 return;
             }
 
-            printf("Rule ID = %d\n", RuleId);
-            
+            // printf("Rule ID = %d\n", RuleId);
+
 
             // Push RHS Reversely into stack
-            for(int i = RhsSize[RuleId]-1; i >= 0; i--)
+            for (int i = RhsSize[RuleId] - 1; i >= 0; i--)
             {
                 TOKEN Token = &Rhs[RuleId][i];
 
@@ -97,48 +94,48 @@ void Parse(FILE *f)
                     break;
                 Push(Stack, Token);
 
-               
+
 
             }
-            
-            
+
+
         }
         else if (TopToken->Type == SEMANTIC_RULE)
         {
-            if(!strcmp(TopToken->Value, "@PUSH"))
+            if (!strcmp(TopToken->Value, "@PUSH"))
             {
                 TopToken = Pop(Stack);
                 Push(MatchedStack, CurrentIn);
-                CurrentIn = Scan(f, &c);
-                
+                CurrentIn = Scan(str, &c);
+
                 // char t = getchar();
             }
             else
             {
                 Push(MatchedStack, TopToken);
             }
-            
+
         }
-        else 
+        else
         {
-            if (!IsEqual(TopToken, CurrentIn)) 
+            if (!IsEqual(TopToken, CurrentIn))
             {
                 printf("Error: Not Matched\n");
                 return;
             }
             else
             {
-                CurrentIn = Scan(f, &c);
+                CurrentIn = Scan(str, &c);
                 printf("matched...\n");
-                
+
             }
-            
-            
+
+
         }
-        // PrintTokenList(Stack);
-        // printf("\n");
-        
-        
+        PrintTokenList(Stack);
+        printf("\n");
+
+
 
     } while (TopToken->Type != END_OF_STACK);
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+
 /**
  * 
  */
@@ -15,18 +16,20 @@ TOKEN NewToken()
     Token->Type = UNKNOWN;
     return Token;
 }
+
 /**
  * 
  */
 TOKEN_LIST NewTokenList(void)
 {
-    TOKEN Token;
     TOKEN_LIST TokenList;
     TokenList = (TOKEN_LIST)malloc(sizeof(*TokenList));
     TokenList->Pointer = 0;
     TokenList->Size = TOKEN_LIST_INIT_SIZE;
     TokenList->Head = (TOKEN *)malloc(TokenList->Size * sizeof(TOKEN));
+    return TokenList;
 }
+
 /**
  * 
  */
@@ -202,7 +205,7 @@ void Append(TOKEN Token, char c)
 /**
  * 
  */
-TOKEN GetToken(char *c, FILE *f)
+TOKEN GetToken(char *c, char* str)
 {
     static unsigned char WaitForID = 1;
     TOKEN Token = NewToken();
@@ -210,19 +213,19 @@ TOKEN GetToken(char *c, FILE *f)
     switch (*c)
     {
     case '+':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == '+')
         {
             strcpy(Token->Value, "++");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else if (*c == '=')
         {
             strcpy(Token->Value, "+=");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else
@@ -232,19 +235,19 @@ TOKEN GetToken(char *c, FILE *f)
             return Token;
         }
     case '-':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == '-')
         {
             strcpy(Token->Value, "--");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else if (*c == '=')
         {
             strcpy(Token->Value, "-=");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else
@@ -254,12 +257,12 @@ TOKEN GetToken(char *c, FILE *f)
             return Token;
         }
     case '*':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == '=')
         {
             strcpy(Token->Value, "*=");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else
@@ -269,12 +272,12 @@ TOKEN GetToken(char *c, FILE *f)
             return Token;
         }
     case '>':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == '>')
         {
             strcpy(Token->Value, ">>");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else
@@ -284,12 +287,12 @@ TOKEN GetToken(char *c, FILE *f)
             return Token;
         }
     case '<':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == '<')
         {
             strcpy(Token->Value, "<<");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else
@@ -299,12 +302,12 @@ TOKEN GetToken(char *c, FILE *f)
             return Token;
         }
     case '/':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == '=')
         {
             strcpy(Token->Value, "/=");
             Token->Type = SPECIAL_TOKEN;
-            *c = fgetc(f);
+            *c = sgetc(str);
 
             return Token;
         }
@@ -312,25 +315,25 @@ TOKEN GetToken(char *c, FILE *f)
         {
             do
             {
-                *c = fgetc(f);
+                *c = sgetc(str);
             } while (*c != '\n' && *c != EOF);
 
             Token->Type = COMMENT;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
-        else if (*c = '*')
+        else if (*c == '*')
         {
             do
             {
-                *c = fgetc(f);
+                *c = sgetc(str);
                 if (*c == '*')
                 {
-                    *c = fgetc(f);
+                    *c = sgetc(str);
                     if (*c == '/')
                     {
                         Token->Type = COMMENT;
-                        *c = fgetc(f);
+                        *c = sgetc(str);
                         return Token;
                     }
                 }
@@ -339,7 +342,7 @@ TOKEN GetToken(char *c, FILE *f)
             } while (1);
 
             Token->Type = UNKNOWN;
-            *c = fgetc(f);
+            *c = sgetc(str);
             return Token;
         }
         else
@@ -352,91 +355,91 @@ TOKEN GetToken(char *c, FILE *f)
     case '=':
         strcpy(Token->Value, "=");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
 
     case ',':
         strcpy(Token->Value, ",");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
 
     case ';':
         strcpy(Token->Value, ";");
         Token->Type = SPECIAL_TOKEN;
         WaitForID = 1;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
 
     case ':':
         strcpy(Token->Value, ":");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
 
     case '(':
         strcpy(Token->Value, "(");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case ')':
         strcpy(Token->Value, ")");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '{':
         strcpy(Token->Value, "{");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '}':
         strcpy(Token->Value, "}");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '|':
         strcpy(Token->Value, "|");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '&':
         strcpy(Token->Value, "&");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '^':
         strcpy(Token->Value, "^");
         Token->Type = SPECIAL_TOKEN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '@':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (IsLetter(*c))
         {
             while (IsLetter(*c) || IsDecimal(*c))
             {
                 Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
             Token->Type = REGISTER;
             return Token;
         }
 
     case '$':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (IsLetter(*c))
         {
             while (IsLetter(*c) || IsDecimal(*c))
             {
                 Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
             Token->Type = PSEUDO_REGISTER;
             return Token;
         }
 
     case '.':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (IsHex(*c))
         {
         }
@@ -448,61 +451,61 @@ TOKEN GetToken(char *c, FILE *f)
     case '\t':
         strcpy(Token->Value, "");
         Token->Type = WHITE_SPACE;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     case '\n':
         strcpy(Token->Value, "");
         Token->Type = WHITE_SPACE;
-        *c = fgetc(f);
+        *c = sgetc(str);
         WaitForID = 1;
         return Token;
 
     case '0':
-        *c = fgetc(f);
+        *c = sgetc(str);
         if (*c == 'x')
         {
-            *c = fgetc(f);
+            *c = sgetc(str);
             while (IsHex(*c) || *c == '`')
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
             Token->Type = HEX;
             return Token;
         }
         else if (*c == 'o')
         {
-            *c = fgetc(f);
+            *c = sgetc(str);
             while (IsOctal(*c) || *c == '`')
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
             Token->Type = OCTAL;
             return Token;
         }
         else if (*c == 'n')
         {
-            *c = fgetc(f);
+            *c = sgetc(str);
             while (IsDecimal(*c) || *c == '`')
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
             Token->Type = DECIMAL;
             return Token;
         }
         else if (*c == 'y')
         {
-            *c = fgetc(f);
+            *c = sgetc(str);
             while (IsBinary(*c) || *c == '`')
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
             Token->Type = BINARY;
             return Token;
@@ -514,17 +517,17 @@ TOKEN GetToken(char *c, FILE *f)
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             } while (IsHex(*c) || *c == '`');
             if (*c == '.')
             {
                 Append(Token, *c);
-                *c = getc(f);
+                *c = sgetc(str);
                 do
                 {
                     if (*c != '`')
                         Append(Token, *c);
-                    *c = fgetc(f);
+                    *c = sgetc(str);
                 } while (IsHex(*c) || *c == '`');
 
                 Token->Type = FLOAT;
@@ -539,12 +542,12 @@ TOKEN GetToken(char *c, FILE *f)
         else if (*c == '.')
         {
             Append(Token, *c);
-            *c = getc(f);
+            *c = sgetc(str);
             do
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             } while (IsHex(*c) || *c == '`');
 
             Token->Type = FLOAT;
@@ -563,7 +566,7 @@ TOKEN GetToken(char *c, FILE *f)
             while (IsLetter(*c) || *c == '_' || IsDecimal(*c))
             {
                 Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             }
 
             if (WaitForID)
@@ -584,14 +587,14 @@ TOKEN GetToken(char *c, FILE *f)
             {
                 if (*c != '`')
                     Append(Token, *c);
-                *c = fgetc(f);
+                *c = sgetc(str);
             } while (IsHex(*c) || *c == '`');
             Token->Type = HEX;
             return Token;
         }
 
         Token->Type = UNKNOWN;
-        *c = fgetc(f);
+        *c = sgetc(str);
         return Token;
     }
     return Token;
@@ -599,15 +602,14 @@ TOKEN GetToken(char *c, FILE *f)
 /**
  * 
  */
-TOKEN Scan(FILE* f, char* c)
+TOKEN Scan(char* str, char* c)
 {
     TOKEN Token = NewToken();
 
     while (1)
     {
-       
-       
-        Token = GetToken(c, f);
+
+        Token = GetToken(c, str);
         if (*c == EOF)
         {
             Token->Type = END_OF_STACK;
@@ -661,4 +663,19 @@ char IsOctal(char c)
         return 1;
     else
         return 0;
+}
+
+char sgetc(char* str)
+{
+    static int idx = 0;
+    char c = str[idx];
+    if (c)
+    {
+        idx++;
+        return c;
+    }
+    else
+    {
+        return EOF;
+    }
 }
