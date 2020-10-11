@@ -147,9 +147,6 @@ void PrintToken(TOKEN Token)
     case DECIMAL:
         printf(" DECIMAL>\n");
         break;
-    case FLOAT:
-        printf(" FLOAT>\n");
-        break;
     case HEX:
         printf(" HEX>\n");
         break;
@@ -519,38 +516,7 @@ TOKEN GetToken(char *c, char* str)
                     Append(Token, *c);
                 *c = sgetc(str);
             } while (IsHex(*c) || *c == '`');
-            if (*c == '.')
-            {
-                Append(Token, *c);
-                *c = sgetc(str);
-                do
-                {
-                    if (*c != '`')
-                        Append(Token, *c);
-                    *c = sgetc(str);
-                } while (IsHex(*c) || *c == '`');
-
-                Token->Type = FLOAT;
-                return Token;
-            }
-            else
-            {
-                Token->Type = HEX;
-                return Token;
-            }
-        }
-        else if (*c == '.')
-        {
-            Append(Token, *c);
-            *c = sgetc(str);
-            do
-            {
-                if (*c != '`')
-                    Append(Token, *c);
-                *c = sgetc(str);
-            } while (IsHex(*c) || *c == '`');
-
-            Token->Type = FLOAT;
+            Token->Type = HEX;
             return Token;
         }
         else

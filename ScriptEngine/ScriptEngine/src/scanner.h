@@ -9,7 +9,6 @@ typedef enum TOKEN_TYPE
 {
     ID,
     DECIMAL,
-    FLOAT,
     HEX,
     OCTAL,
     BINARY,
@@ -19,7 +18,6 @@ typedef enum TOKEN_TYPE
     COMMENT,
     REGISTER,
     PSEUDO_REGISTER,
-
     NON_TERMINAL,
     SEMANTIC_RULE,
     END_OF_STACK,
