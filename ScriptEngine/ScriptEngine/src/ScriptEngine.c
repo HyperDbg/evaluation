@@ -18,12 +18,18 @@ void ScriptEngineParse(char *str)
 
     TOKEN CurrentIn;
     TOKEN TopToken;
+    TOKEN Op0; 
+    TOKEN Op1;
+    TOKEN Temp;
 
     int NonTerminalId;
     int TerminalId;
     int RuleId;
     char c;
     char t;
+
+    TempValueCounter = 0;
+
 
     //
     // End of File Token
@@ -57,6 +63,7 @@ void ScriptEngineParse(char *str)
         PrintToken(CurrentIn);
         printf("\n");
 #endif
+        
 
         if (TopToken->Type == NON_TERMINAL)
         {
@@ -103,7 +110,29 @@ void ScriptEngineParse(char *str)
             }
             else
             {
-                Push(MatchedStack, TopToken);
+                // Push(MatchedStack, TopToken);
+                Op0 = Pop(MatchedStack);
+                Op1 = Pop(MatchedStack);
+
+                if (!strcmp(TopToken->Value, "@MOV"))
+                {
+                    PSYMBOL Op0Symbol = ToSymbol(Op0);
+                    PSYMBOL Op1Symbol = ToSymbol(Op1);
+                    PrintToken(Op0);
+                    PrintSymbol(Op0Symbol);
+                    // PrintSymbol(Op1Symbol);
+
+
+                    printf("%s %s, %s\n", TopToken->Value, Op0->Value, Op1->Value);
+                }
+                else
+                {
+                    Temp = NewToken();
+                    strcpy(Temp->Value, "t");
+                    Temp->Type = TEMP;
+                    Push(MatchedStack, Temp);
+                    printf("%s t, %s, %s\n", TopToken->Value, Op0->Value, Op1->Value);
+                }
             }
         }
         else
@@ -116,6 +145,9 @@ void ScriptEngineParse(char *str)
             else
             {
                 CurrentIn = Scan(str, &c);
+                printf("\nCurrent Input :\n");
+                PrintToken(CurrentIn);
+                printf("\n");
 
 #ifdef _SCRIPT_ENGINE_DBG_EN
                 printf("matched...\n");
@@ -238,6 +270,7 @@ int GetTerminalId(TOKEN Token)
         }
     }
     return -1;
+
 }
 
 /**
@@ -294,13 +327,9 @@ void RemoveSymbol(PSYMBOL Symbol)
 *
 *
 */
-PSYMBOL_BUFFER NewSymbolBuffer(void)
+SYMBOL_BUFFER NewSymbolBuffer(void)
 {
-    PSYMBOL_BUFFER SymbolBuffer;
-    SymbolBuffer = (PSYMBOL_BUFFER)malloc(sizeof(*SymbolBuffer));
-    SymbolBuffer->Pointer = 0;
-    SymbolBuffer->Size = SYMBOL_BUFFER_INIT_SIZE;
-    SymbolBuffer->Head = (PSYMBOL)malloc(SymbolBuffer->Size * sizeof(SYMBOL));
+    SYMBOL_BUFFER SymbolBuffer = (SYMBOL_BUFFER)malloc(SYMBOL_BUFFER_INIT_SIZE);
     return SymbolBuffer;
 }
 
@@ -309,7 +338,7 @@ PSYMBOL_BUFFER NewSymbolBuffer(void)
 *
 *
 */
-void RemoveSymbolBuffer(PSYMBOL_BUFFER SymbolBuffer)
+void RemoveSymbolBuffer(SYMBOL_BUFFER SymbolBuffer)
 {
     // TODO: When size of SymbolBuffer is more than 0, it must be freed
     free(SymbolBuffer);
@@ -321,51 +350,9 @@ void RemoveSymbolBuffer(PSYMBOL_BUFFER SymbolBuffer)
 *
 *
 */
-PSYMBOL_BUFFER PushSymbol(PSYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol)
+SYMBOL_BUFFER PushSymbol(SYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol)
 {
-    //
-    // Calculate address to write new token
-    //
-    uintptr_t Head = (uintptr_t)SymbolBuffer->Head;
-    uintptr_t Pointer = (uintptr_t)SymbolBuffer->Pointer;
-    PSYMBOL WriteAddr = (PSYMBOL)(Head + Pointer * sizeof(SYMBOL));
-
-    //
-    // Write input to the appropriate address in SymbolBuffer
-    //
-    *WriteAddr = *Symbol;
-
-    //
-    // Update Pointer
-    //
-    SymbolBuffer->Pointer++;
-
-    //
-    // Handle Overflow
-    //
-    if (Pointer == SymbolBuffer->Size - 1)
-    {
-        //
-        // Allocate a new buffer for string list with doubled length
-        //
-        PSYMBOL NewHead = (PSYMBOL)malloc(2 * SymbolBuffer->Size * sizeof(SYMBOL));
-
-        //
-        // Copy old Buffer to new buffer
-        //
-        memcpy(NewHead, SymbolBuffer->Head, SymbolBuffer->Size * sizeof(SYMBOL));
-
-        //
-        // Free Old buffer
-        //
-        free(SymbolBuffer->Head);
-
-        //
-        // Upadate Head and size of SymbolBuffer
-        //
-        SymbolBuffer->Size *= 2;
-        SymbolBuffer->Head = NewHead;
-    }
+    
 
     return SymbolBuffer;
 }
@@ -375,15 +362,10 @@ PSYMBOL_BUFFER PushSymbol(PSYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol)
 *
 *
 */
-PSYMBOL PopSymbol(PSYMBOL_BUFFER SymbolBuffer)
+PSYMBOL PopSymbol(SYMBOL_BUFFER SymbolBuffer)
 {
-    if (SymbolBuffer->Pointer > 0)
-    {
-        SymbolBuffer->Pointer--;
-    }
-    uintptr_t Head = SymbolBuffer->Head;
-    uintptr_t Pointer = SymbolBuffer->Pointer;
-    PSYMBOL ReadAddr = (PSYMBOL)(Head + Pointer * sizeof(SYMBOL));
+   
+    PSYMBOL ReadAddr = 0;
 
     return ReadAddr;
 }
@@ -403,14 +385,10 @@ void PrintSymbol(PSYMBOL Symbol)
 *
 *
 */
-void PrintSymbolBuffer(const PSYMBOL_BUFFER SymbolBuffer)
+void PrintSymbolBuffer(const SYMBOL_BUFFER SymbolBuffer)
 {
     PSYMBOL Symbol;
-    for (int i = 0; i < SymbolBuffer->Pointer; i++)
-    {
-        Symbol = SymbolBuffer->Head + i;
-        PrintSymbol(Symbol);
-    }
+    return;
 }
 
 PSYMBOL ToSymbol(TOKEN Token)
@@ -421,39 +399,43 @@ PSYMBOL ToSymbol(TOKEN Token)
     {
     case ID:
         Symbol->Value = IdCounter;
-        SetType(Symbol->Type, SYMBOL_ID_TYPE);
+        SetType(&Symbol->Type, SYMBOL_ID_TYPE);
         return Symbol;
     case DECIMAL:
         Symbol->Value = DecimalToInt(Token->Value);
-        SetType(Symbol->Type, SYMBOL_NUM_TYPE);
+        SetType(&Symbol->Type, SYMBOL_NUM_TYPE);
         return Symbol;
     case HEX:
         Symbol->Value = HexToInt(Token->Value);
-        SetType(Symbol->Type, SYMBOL_NUM_TYPE);
+        SetType(&Symbol->Type, SYMBOL_NUM_TYPE);
         return Symbol;
     case OCTAL:
         Symbol->Value = OctalToInt(Token->Value);
-        SetType(Symbol->Type, SYMBOL_NUM_TYPE);
+        SetType(&Symbol->Type, SYMBOL_NUM_TYPE);
         return Symbol;
 
     case BINARY:
         Symbol->Value = BinaryToInt(Token->Value);
-        SetType(Symbol->Type, SYMBOL_NUM_TYPE);
+        SetType(&Symbol->Type, SYMBOL_NUM_TYPE);
         return Symbol;
 
     case REGISTER:
         Symbol->Value = RegisterToInt(Token->Value); // TODO: Implement RegisterToInt(char* str)
-        SetType(Symbol->Type, SYMBOL_REGISTER_TYPE);
+        SetType(&Symbol->Type, SYMBOL_REGISTER_TYPE);
         return Symbol;
 
     case PSEUDO_REGISTER:
         Symbol->Value = PseudoRegToInt(Token->Value); // TODO: Implement PseudoRegToInt(char* str)
-        SetType(Symbol->Type, SYMBOL_PSEUDO_REG_TYPE);
+        SetType(&Symbol->Type, SYMBOL_PSEUDO_REG_TYPE);
         return Symbol;
 
     case SEMANTIC_RULE:
         Symbol->Value = SemanticRuleToInt(Token->Value); // TODO: Implement SemanticRuleToInt(char* str)
-        SetType(Symbol->Type, SYMBOL_SEMANTIC_RULE_TYPE);
+        SetType(&Symbol->Type, SYMBOL_SEMANTIC_RULE_TYPE);
+        return Symbol;
+    case TEMP:
+        Symbol->Value = TempValueCounter++; // TODO: Change it to an acceptable value  
+        SetType(&Symbol->Type, SYMBOL_TEMP);
         return Symbol;
 
     default:
@@ -469,7 +451,7 @@ void SetType(unsigned long long *Val, unsigned char Type)
 unsigned long long int DecimalToInt(char *str)
 {
     unsigned long long int acc = 0;
-    for (int i = len(str) - 1; i >= 0; i--)
+    for (int i = strlen(str) - 1; i >= 0; i--)
     {
         acc += (str[i] - '0');
         acc *= 10;
@@ -479,7 +461,7 @@ unsigned long long int DecimalToInt(char *str)
 unsigned long long int HexToInt(char *str)
 {
     unsigned long long int acc = 0;
-    for (int i = len(str) - 1; i >= 0; i--)
+    for (int i = strlen(str) - 1; i >= 0; i--)
     {
         acc += (str[i] >= '0' && str[i] <= '9') ? str[i] - '0' : (str[i] >= 'a' && str[i] <= 'f') ? str[i] - 'a' : str[i] - 'A';
         acc <<= 4;
@@ -489,7 +471,7 @@ unsigned long long int HexToInt(char *str)
 unsigned long long int OctalToInt(char *str)
 {
     unsigned long long int acc = 0;
-    for (int i = len(str) - 1; i >= 0; i--)
+    for (int i = strlen(str) - 1; i >= 0; i--)
     {
         acc += (str[i] - '0');
         acc <<= 3;
@@ -499,7 +481,7 @@ unsigned long long int OctalToInt(char *str)
 unsigned long long int BinaryToInt(char *str)
 {
     unsigned long long int acc = 0;
-    for (int i = len(str) - 1; i >= 0; i--)
+    for (int i = strlen(str) - 1; i >= 0; i--)
     {
         acc += (str[i] - '0');
         acc <<= 1;
@@ -614,8 +596,4 @@ unsigned long long int SemanticRuleToInt(char *str)
     {
         return (unsigned long long int)FUNC_LOW;
     }
-}
-PSYMBOL_BUFFER ExtractSymbolBuffer(TOKEN_LIST TokenList)
-{
-    
 }

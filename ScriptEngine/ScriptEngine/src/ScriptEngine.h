@@ -9,6 +9,7 @@
 #define SYMBOL_REGISTER_TYPE 2
 #define SYMBOL_PSEUDO_REG_TYPE 3
 #define SYMBOL_SEMANTIC_RULE_TYPE 4
+#define SYMBOL_TEMP 5
 
 
 #define R0_MNEMONIC 0
@@ -48,13 +49,10 @@ __declspec(dllexport) typedef struct SYMBOL
 	long long unsigned Value;
 }SYMBOL, * PSYMBOL;
 
-__declspec(dllexport) typedef struct SYMBOL_BUFFER
-{
-	PSYMBOL Head;
-	unsigned int Pointer;
-	unsigned int Size;
 
-}SYMBOL_BUFFER, * PSYMBOL_BUFFER;
+typedef char* SYMBOL_BUFFER;
+unsigned int TempValueCounter;
+
 
 char IsNoneTerminal(TOKEN Token);
 char IsSemanticRule(TOKEN Token); 
@@ -68,15 +66,14 @@ PSYMBOL NewSymbol(void);
 void RemoveSymbol(PSYMBOL Symbol);
 void PrintSymbol(PSYMBOL Symbol);
 
-PSYMBOL_BUFFER NewSymbolBuffer(void);
-void RemoveSymbolBuffer(PSYMBOL_BUFFER SymbolBuffer);
-PSYMBOL_BUFFER PushSymbol(PSYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol);
-PSYMBOL PopSymbol(PSYMBOL_BUFFER SymbolBuffer);
-void PrintSymbolBuffer(const PSYMBOL_BUFFER SymbolBuffer);
+SYMBOL_BUFFER NewSymbolBuffer(void);
+void RemoveSymbolBuffer(SYMBOL_BUFFER SymbolBuffer);
+SYMBOL_BUFFER PushSymbol(SYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol);
+PSYMBOL PopSymbol(SYMBOL_BUFFER SymbolBuffer);
+void PrintSymbolBuffer(const SYMBOL_BUFFER SymbolBuffer);
 
 PSYMBOL ToSymbol(TOKEN Token);
 
-PSYMBOL_BUFFER ExtractSymbolBuffer(TOKEN_LIST TokenList);
 
 
 

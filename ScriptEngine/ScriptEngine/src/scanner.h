@@ -22,6 +22,7 @@ typedef enum TOKEN_TYPE
     SEMANTIC_RULE,
     END_OF_STACK,
     EPSILON,
+    TEMP,
     UNKNOWN
 } TOKEN_TYPE;
 

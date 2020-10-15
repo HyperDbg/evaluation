@@ -160,7 +160,7 @@ VOID TestParser(string Expr) {
 
 int main() 
 {
-    string str = "x=(4*5*6)+7; ";
+    string str = "x=3*3; \n";
     TestParser(str.c_str());
     return 0;
 }

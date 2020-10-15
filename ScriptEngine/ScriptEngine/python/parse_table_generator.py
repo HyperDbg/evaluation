@@ -90,8 +90,12 @@ class Parser:
         stack.append(self.start)
         top = ""
         tokens, current_in = read(tokens)
+        t_counter = 0 
+        
         while top != "$":
             top = get_top(stack)
+
+            # print(stack)
             
             if self.isNoneTerminal(top):
                 id = self.parse_table[self.get_noneterminal_id(top)][self.get_terminal_id(current_in)]
@@ -124,12 +128,25 @@ class Parser:
                         exit()
                         
                 else:
-                    matched_stack.append(top)
+                    
+                    
+                    
+                    op0 = matched_stack.pop()
+  
+                    op1 = matched_stack.pop()
+
+                    if top == "@MOV":
+                        print(top,"\t", op1, ", ", op0 )
+                    else:
+                        matched_stack.append("t" + str(t_counter))
+                        print(top, "\t", "t"+ str(t_counter), ", ", op1, ",", op0 )
+                        t_counter += 1
+                    
                 # print("matched stack :", end ="")
                 # print(matched_stack)
 
-
                 stack.pop()
+
             else: # Terminal 
                 # TODO: Handle Error 
                 current_in = tokens[0]
@@ -138,8 +155,35 @@ class Parser:
                 stack.pop()
             # print(top)
 
+        return matched_stack
 
-        print(matched_stack)
+    # def code_gen(self, input_stack):
+    #     print("input stack:", input_stack)
+    #     if len(input_stack) < 3:
+    #         return input_stack
+    #     top_idx = len(input_stack) - 1
+    #     first_op_idx = len(input_stack) - 2
+    #     second_op_idx = len(input_stack) - 3
+
+    #     output_stack = []
+
+    #     if not self.isSemanticRule(input_stack[top_idx]):
+    #         print("Error!")
+    #         exit()
+    #     else:
+    #         output_stack.append(input_stack.pop())
+    #         if not self.isSemanticRule(input_stack[first_op_idx]): # Operand
+    #             output_stack.append(input_stack.pop())
+    #         else: # Operator
+    #             output_stack.extend(self.code_gen(input_stack))
+
+    #     if not self.isSemanticRule(input_stack[second_op_idx]): # Operand 
+    #         output_stack.append(input_stack.pop())
+    #     else: #Operator  
+    #         output_stack.extend(self.code_gen(input_stack))
+    #     print("output stack:", output_stack)
+    #     return output_stack
+                 
 
             
     def read_grammer(self):
@@ -539,8 +583,10 @@ class Parser:
 
 parser = Parser()
 parser.run()
-tokens = ['_id', '=', '_hex',  ';', '$']
-parser.parse(tokens)
+tokens = ['_id', '=', '(', '_hex', '*', '_hex', ')', '*', '_hex', '*', '_decimal', '*', '_octal', ';', '$']
+stack = parser.parse(tokens)
+print(stack)
+# parser.code_gen(stack)
 
 
 
