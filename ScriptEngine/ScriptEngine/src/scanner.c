@@ -354,6 +354,11 @@ TOKEN GetToken(char *c, char* str)
         Token->Type = SPECIAL_TOKEN;
         *c = sgetc(str);
         return Token;
+    case '%':
+        strcpy(Token->Value, "%");
+        Token->Type = SPECIAL_TOKEN;
+        *c = sgetc(str);
+        return Token;
 
     case ',':
         strcpy(Token->Value, ",");

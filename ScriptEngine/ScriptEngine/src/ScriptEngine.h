@@ -43,6 +43,23 @@
 
 #define SYMBOL_BUFFER_INIT_SIZE 16
 
+// TODO : Automate generating this array
+const char* OneOperandSemantics[] =
+{
+	"@POI",
+	"@DB",
+	"@DD",
+	"@DW",
+	"@DQ",
+	"@STR",
+	"@WSTR",
+	"@SIZEOF",
+	"@NOT",
+	"@NEG",
+	"@HI",
+	"@LOW"
+};
+
 __declspec(dllexport) typedef struct SYMBOL
 {
 	long long unsigned Type;
@@ -51,7 +68,7 @@ __declspec(dllexport) typedef struct SYMBOL
 
 
 typedef char* SYMBOL_BUFFER;
-unsigned int TempValueCounter;
+unsigned int TempValueCounter = 0;
 
 
 char IsNoneTerminal(TOKEN Token);
@@ -96,4 +113,6 @@ unsigned long long int SemanticRuleToInt(char* str);
 
 __declspec(dllexport) void ScriptEngineParse(char* str);
 
+void CodeGen(TOKEN_LIST MatchedStack, SYMBOL_BUFFER CodeBuffer, TOKEN Operator);
+char HasTwoOperand(TOKEN Operator);
 

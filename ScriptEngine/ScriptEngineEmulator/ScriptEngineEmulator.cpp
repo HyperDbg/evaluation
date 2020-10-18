@@ -160,7 +160,7 @@ VOID TestParser(string Expr) {
 
 int main() 
 {
-    string str = "x=3*3; \n";
+    string str = "sina=dw(@rcx % 3 * poi(5) + poi(3) + 53 / 34 & 23 % 34) ; \n";
     TestParser(str.c_str());
     return 0;
 }

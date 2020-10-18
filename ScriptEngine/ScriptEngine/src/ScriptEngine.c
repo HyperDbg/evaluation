@@ -15,12 +15,11 @@ void ScriptEngineParse(char *str)
 {
     TOKEN_LIST Stack = NewTokenList();
     TOKEN_LIST MatchedStack = NewTokenList();
+    SYMBOL_BUFFER CodeBuffer = (SYMBOL_BUFFER)malloc(100);
 
     TOKEN CurrentIn;
     TOKEN TopToken;
-    TOKEN Op0; 
-    TOKEN Op1;
-    TOKEN Temp;
+    
 
     int NonTerminalId;
     int TerminalId;
@@ -110,29 +109,8 @@ void ScriptEngineParse(char *str)
             }
             else
             {
-                // Push(MatchedStack, TopToken);
-                Op0 = Pop(MatchedStack);
-                Op1 = Pop(MatchedStack);
-
-                if (!strcmp(TopToken->Value, "@MOV"))
-                {
-                    PSYMBOL Op0Symbol = ToSymbol(Op0);
-                    PSYMBOL Op1Symbol = ToSymbol(Op1);
-                    PrintToken(Op0);
-                    PrintSymbol(Op0Symbol);
-                    // PrintSymbol(Op1Symbol);
-
-
-                    printf("%s %s, %s\n", TopToken->Value, Op0->Value, Op1->Value);
-                }
-                else
-                {
-                    Temp = NewToken();
-                    strcpy(Temp->Value, "t");
-                    Temp->Type = TEMP;
-                    Push(MatchedStack, Temp);
-                    printf("%s t, %s, %s\n", TopToken->Value, Op0->Value, Op1->Value);
-                }
+                CodeGen(MatchedStack, CodeBuffer, TopToken);
+                
             }
         }
         else
@@ -145,9 +123,9 @@ void ScriptEngineParse(char *str)
             else
             {
                 CurrentIn = Scan(str, &c);
-                printf("\nCurrent Input :\n");
+                /*printf("\nCurrent Input :\n");
                 PrintToken(CurrentIn);
-                printf("\n");
+                printf("\n");*/
 
 #ifdef _SCRIPT_ENGINE_DBG_EN
                 printf("matched...\n");
@@ -162,6 +140,70 @@ void ScriptEngineParse(char *str)
     } while (TopToken->Type != END_OF_STACK);
 
     PrintTokenList(MatchedStack);
+}
+
+void CodeGen(TOKEN_LIST MatchedStack, SYMBOL_BUFFER CodeBuffer, TOKEN Operator)
+{
+
+    TOKEN Op0;
+    TOKEN Op1;
+    TOKEN Temp;
+
+    if (!strcmp(Operator->Value, "@MOV"))
+    {
+        Op0 = Pop(MatchedStack);
+        Op1 = Pop(MatchedStack);
+        printf("%s\t%s,\t%s\n", Operator->Value, Op1->Value, Op0->Value);
+    }
+    else if (HasTwoOperand(Operator))
+    {
+        Op0 = Pop(MatchedStack);
+        Op1 = Pop(MatchedStack);
+       
+
+        Temp = NewToken();
+        char TempValue[8];
+        sprintf(TempValue, "t%d", ++TempValueCounter);
+        strcpy(Temp->Value, TempValue);
+        
+        Temp->Type = TEMP;
+        Push(MatchedStack, Temp);
+        //PSYMBOL TempSymbol = ToSymbol(Temp);
+        unsigned int x = (unsigned int)Temp->Value;
+
+        printf("%s\t%s,\t%s,\t%s\n", Operator->Value, Temp->Value, Op0->Value, Op1->Value);
+    }
+    else
+    {
+        Op0 = Pop(MatchedStack);
+       
+        Temp = NewToken();
+        char TempValue[8];
+        sprintf(TempValue, "t%d", ++TempValueCounter);
+        strcpy(Temp->Value, TempValue);
+
+        Push(MatchedStack, Temp);
+        //PSYMBOL TempSymbol = ToSymbol(Temp);
+        unsigned int x = (unsigned int)Temp->Value;
+
+        printf("%s\t%s,\t%s\n", Operator->Value, Temp->Value, Op0->Value);
+    }
+
+
+}
+
+
+char HasTwoOperand(TOKEN Operator)
+{
+    unsigned int n = sizeof(OneOperandSemantics) / sizeof(char*);
+    for (int i = 0; i < n; i++)
+    {
+        if (!strcmp(Operator->Value, OneOperandSemantics[i]))
+        {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 /**
@@ -434,7 +476,7 @@ PSYMBOL ToSymbol(TOKEN Token)
         SetType(&Symbol->Type, SYMBOL_SEMANTIC_RULE_TYPE);
         return Symbol;
     case TEMP:
-        Symbol->Value = TempValueCounter++; // TODO: Change it to an acceptable value  
+        Symbol->Value = (unsigned int)Token->Value; // TODO: Change it to an acceptable value  
         SetType(&Symbol->Type, SYMBOL_TEMP);
         return Symbol;
 
