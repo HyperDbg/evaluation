@@ -39,9 +39,10 @@
 #define FUNC_NEG 18
 #define FUNC_HI 19
 #define FUNC_LOW 20
+#define FUNC_MOV 21
 
 
-#define SYMBOL_BUFFER_INIT_SIZE 16
+#define SYMBOL_BUFFER_INIT_SIZE 1024
 
 // TODO : Automate generating this array
 const char* OneOperandSemantics[] =
@@ -66,8 +67,15 @@ __declspec(dllexport) typedef struct SYMBOL
 	long long unsigned Value;
 }SYMBOL, * PSYMBOL;
 
+__declspec(dllexport) typedef struct SYMBOL_BUFFER
+{
+	PSYMBOL Head;
+	unsigned int Pointer;
+	unsigned int Size;
 
-typedef char* SYMBOL_BUFFER;
+}SYMBOL_BUFFER, * PSYMBOL_BUFFER;
+
+
 unsigned int TempValueCounter = 0;
 
 
@@ -83,11 +91,11 @@ PSYMBOL NewSymbol(void);
 void RemoveSymbol(PSYMBOL Symbol);
 void PrintSymbol(PSYMBOL Symbol);
 
-SYMBOL_BUFFER NewSymbolBuffer(void);
-void RemoveSymbolBuffer(SYMBOL_BUFFER SymbolBuffer);
-SYMBOL_BUFFER PushSymbol(SYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol);
-PSYMBOL PopSymbol(SYMBOL_BUFFER SymbolBuffer);
-void PrintSymbolBuffer(const SYMBOL_BUFFER SymbolBuffer);
+PSYMBOL_BUFFER NewSymbolBuffer(void);
+void RemoveSymbolBuffer(PSYMBOL_BUFFER SymbolBuffer);
+PSYMBOL_BUFFER PushSymbol(PSYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol);
+PSYMBOL PopSymbol(PSYMBOL_BUFFER SymbolBuffer);
+void PrintSymbolBuffer(const PSYMBOL_BUFFER SymbolBuffer);
 
 PSYMBOL ToSymbol(TOKEN Token);
 
@@ -113,6 +121,6 @@ unsigned long long int SemanticRuleToInt(char* str);
 
 __declspec(dllexport) void ScriptEngineParse(char* str);
 
-void CodeGen(TOKEN_LIST MatchedStack, SYMBOL_BUFFER CodeBuffer, TOKEN Operator);
+void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator);
 char HasTwoOperand(TOKEN Operator);
 
