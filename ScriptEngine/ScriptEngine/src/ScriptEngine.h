@@ -31,18 +31,20 @@
 #define FUNC_POI 10
 #define FUNC_DB 11
 #define FUNC_DD 12
-#define FUNC_DQ 13
-#define FUNC_STR 14
-#define FUNC_WSTR 15
-#define FUNC_SIZEOF 16
-#define FUNC_NOT 17
-#define FUNC_NEG 18
-#define FUNC_HI 19
-#define FUNC_LOW 20
-#define FUNC_MOV 21
+#define FUNC_DW 13
+#define FUNC_DQ 14
+#define FUNC_STR 15
+#define FUNC_WSTR 16
+#define FUNC_SIZEOF 17
+#define FUNC_NOT 18
+#define FUNC_NEG 19
+#define FUNC_HI 20
+#define FUNC_LOW 21
+#define FUNC_MOV 22
 
 
 #define SYMBOL_BUFFER_INIT_SIZE 1024
+#define MAX_TEMP_COUNT 2
 
 // TODO : Automate generating this array
 const char* OneOperandSemantics[] =
@@ -76,7 +78,7 @@ __declspec(dllexport) typedef struct SYMBOL_BUFFER
 }SYMBOL_BUFFER, * PSYMBOL_BUFFER;
 
 
-unsigned int TempValueCounter = 0;
+char TempMap[MAX_TEMP_COUNT] = { 0 };
 
 
 char IsNoneTerminal(TOKEN Token);
@@ -115,6 +117,9 @@ unsigned long long int BinaryToInt(char* str);
 unsigned long long int RegisterToInt(char* str);
 unsigned long long int PseudoRegToInt(char* str);
 unsigned long long int SemanticRuleToInt(char* str);
+
+TOKEN NewTemp(void);
+void FreeTemp(TOKEN Temp);
 
 
 

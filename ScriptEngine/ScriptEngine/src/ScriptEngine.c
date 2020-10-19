@@ -27,7 +27,6 @@ void ScriptEngineParse(char *str)
     char c;
     char t;
 
-    TempValueCounter = 0;
 
 
     //
@@ -123,7 +122,7 @@ void ScriptEngineParse(char *str)
             else
             {
                 CurrentIn = Scan(str, &c);
-                /*printf("\nCurrent Input :\n");
+              /*  printf("\nCurrent Input :\n");
                 PrintToken(CurrentIn);
                 printf("\n");*/
 
@@ -142,6 +141,42 @@ void ScriptEngineParse(char *str)
     PrintTokenList(MatchedStack);
 }
 
+TOKEN NewTemp(void)
+{
+    static unsigned int TempID = 0;
+    int i;
+    for (i = 0; i < MAX_TEMP_COUNT; i++)
+    {
+        if (TempMap[i] == 0)
+        {
+            TempID = i;
+            TempMap[i] = 1;
+            break;
+        }
+    }
+    if (i == MAX_TEMP_COUNT)
+    {
+        // TODO: Handle Error
+        printf("Error: Not enough tempporary variables to allocate. \n");
+    }
+    TOKEN Temp = NewToken();
+    char TempValue[8];
+    sprintf(TempValue, "%d", TempID);
+    strcpy(Temp->Value, TempValue);
+    Temp->Type = TEMP;
+    return Temp;
+
+}
+void FreeTemp(TOKEN Temp)
+{
+    int id = DecimalToInt(Temp->Value);
+    if (Temp->Type == TEMP)
+    {
+        TempMap[id] = 0;
+    }
+    free(Temp);
+
+}
 void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
 {
 
@@ -175,6 +210,10 @@ void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
         PrintSymbol(Op1Symbol);
         PrintSymbol(Op0Symbol);
         printf("_____________\n");
+
+        // Free the operand if it is a temp value
+        FreeTemp(Op0);
+        FreeTemp(Op1);
     }
     else if (HasTwoOperand(Operator))
     {
@@ -185,11 +224,7 @@ void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
 
         
 
-        Temp = NewToken();
-        char TempValue[8];
-        sprintf(TempValue, "t%d", ++TempValueCounter);
-        strcpy(Temp->Value, TempValue);
-        Temp->Type = TEMP;
+        Temp = NewTemp();
         Push(MatchedStack, Temp);
         TempSymbol = ToSymbol(Temp);
         PushSymbol(CodeBuffer, TempSymbol);
@@ -205,14 +240,15 @@ void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
         PrintSymbol(Op1Symbol);
         PrintSymbol(Op0Symbol);
         printf("_____________\n");
+
+        // Free the operand if it is a temp value
+        FreeTemp(Op0);
+        FreeTemp(Op1);
     }
     else
     {
 
-        Temp = NewToken();
-        char TempValue[8];
-        sprintf(TempValue, "t%d", ++TempValueCounter);
-        strcpy(Temp->Value, TempValue);
+        Temp = NewTemp();
         Push(MatchedStack, Temp);
         TempSymbol = ToSymbol(Temp);
         PushSymbol(CodeBuffer, TempSymbol);
@@ -226,6 +262,9 @@ void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
         PrintSymbol(TempSymbol);
         PrintSymbol(Op0Symbol);
         printf("_____________\n");
+
+        // Free the operand if it is a temp value
+        FreeTemp(Op0);
     }
 
 
@@ -457,7 +496,7 @@ PSYMBOL ToSymbol(TOKEN Token)
         SetType(&Symbol->Type, SYMBOL_SEMANTIC_RULE_TYPE);
         return Symbol;
     case TEMP:
-        Symbol->Value = (unsigned long long int)1; // TODO: Convert String to int
+        Symbol->Value = DecimalToInt(Token->Value); // TODO: Convert String to int
         SetType(&Symbol->Type, SYMBOL_TEMP);
         return Symbol;
 
@@ -532,7 +571,7 @@ unsigned long long int PseudoRegToInt(char *str)
 {
     // ...
     // TODO: Handle all Pseudo Registers
-    return 0;
+    return INVALID;
 }
 unsigned long long int SemanticRuleToInt(char *str)
 {
@@ -587,6 +626,10 @@ unsigned long long int SemanticRuleToInt(char *str)
     else if (!strcmp(str, "@DD"))
     {
         return (unsigned long long int)FUNC_DD;
+    }
+    else if (!strcmp(str, "@DW"))
+    {
+        return (unsigned long long int)FUNC_DW;
     }
     else if (!strcmp(str, "@DQ"))
     {

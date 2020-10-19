@@ -532,7 +532,18 @@ TOKEN GetToken(char *c, char* str)
         }
 
     default:
-        if (IsLetter(*c) || *c == '_')
+        if (IsHex(*c))
+        {
+            do
+            {
+                if (*c != '`')
+                    Append(Token, *c);
+                *c = sgetc(str);
+            } while (IsHex(*c) || *c == '`');
+            Token->Type = HEX;
+            return Token;
+        }
+        else if (IsLetter(*c) || *c == '_')
         {
             while (IsLetter(*c) || *c == '_' || IsDecimal(*c))
             {
@@ -552,17 +563,7 @@ TOKEN GetToken(char *c, char* str)
 
             return Token;
         }
-        else if (IsHex(*c))
-        {
-            do
-            {
-                if (*c != '`')
-                    Append(Token, *c);
-                *c = sgetc(str);
-            } while (IsHex(*c) || *c == '`');
-            Token->Type = HEX;
-            return Token;
-        }
+        
 
         Token->Type = UNKNOWN;
         *c = sgetc(str);

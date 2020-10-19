@@ -160,9 +160,9 @@ VOID TestParser(string Expr) {
 
 int main() 
 {
-    string str = "x = poi(100); ";
-    //string str = "SINA=dw(1+(1*5)+(34*34)|7*(99^34) ) ; \n x = str(dq(dw( dd(db(poi(wstr(34)&sizeof(1)>>not(2)<<neg(3)+hi(4)-low(5)*6/7%8)))))); \n";
-    //string str = "x1 = poi(poi((poi(($proc&neg(1000`0000))+10)^poi (poi(poi(poi(poi(poi(poi(poi($prcb+18)+220)+648)+8)-240)+2a0)))^neg(0n6708588087252463955)^($proc&neg(100000)))-8)-1080); ";
+    // string str = "x = poi(0n100); ";
+    // string str = "SINA=dw(1+(1*5)+(34*34)|7*(99^34) ) ; \n x = str(dq(dw( dd(db(poi(wstr(34)&sizeof(1)>>not(2)<<neg(3)+hi(4)-low(5)*6/7%8)))))); \n";
+    string str = "x1 = poi(poi((poi(($proc&neg(1000`0000))+10)^poi (poi(poi(poi(poi(poi(poi(poi($prcb+18)+220)+648)+8)-240)+2a0)))^neg(0n6708588087252463955)^($proc&neg(100000)))-D8)-1080); ";
     TestParser(str.c_str());
     return 0;
 }
