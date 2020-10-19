@@ -26,6 +26,8 @@ typedef enum TOKEN_TYPE
     UNKNOWN
 } TOKEN_TYPE;
 
+
+
 struct _TOKEN
 {
     TOKEN_TYPE Type;

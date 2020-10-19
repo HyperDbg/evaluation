@@ -1,4 +1,7 @@
-#pragma once
+#ifndef SCRIPT_ENGINE_H
+#define SCRIPT_ENGINE_H
+
+
 #include <stdio.h>
 #include "scanner.h"
 
@@ -44,10 +47,10 @@
 
 
 #define SYMBOL_BUFFER_INIT_SIZE 1024
-#define MAX_TEMP_COUNT 2
+#define MAX_TEMP_COUNT 32
 
 // TODO : Automate generating this array
-const char* OneOperandSemantics[] =
+const char* OneOperandSemanticRules[] =
 {
 	"@POI",
 	"@DB",
@@ -63,13 +66,13 @@ const char* OneOperandSemantics[] =
 	"@LOW"
 };
 
-__declspec(dllexport) typedef struct SYMBOL
+typedef struct SYMBOL
 {
 	long long unsigned Type;
 	long long unsigned Value;
 }SYMBOL, * PSYMBOL;
 
-__declspec(dllexport) typedef struct SYMBOL_BUFFER
+typedef struct SYMBOL_BUFFER
 {
 	PSYMBOL Head;
 	unsigned int Pointer;
@@ -91,13 +94,14 @@ int GetTerminalId(TOKEN Token);
 
 PSYMBOL NewSymbol(void);
 void RemoveSymbol(PSYMBOL Symbol);
-void PrintSymbol(PSYMBOL Symbol);
+__declspec(dllexport) void PrintSymbol(PSYMBOL Symbol);
 
 PSYMBOL_BUFFER NewSymbolBuffer(void);
 void RemoveSymbolBuffer(PSYMBOL_BUFFER SymbolBuffer);
 PSYMBOL_BUFFER PushSymbol(PSYMBOL_BUFFER SymbolBuffer, const PSYMBOL Symbol);
 PSYMBOL PopSymbol(PSYMBOL_BUFFER SymbolBuffer);
-void PrintSymbolBuffer(const PSYMBOL_BUFFER SymbolBuffer);
+
+__declspec(dllexport) void PrintSymbolBuffer(const PSYMBOL_BUFFER SymbolBuffer);
 
 PSYMBOL ToSymbol(TOKEN Token);
 
@@ -124,8 +128,9 @@ void FreeTemp(TOKEN Temp);
 
 
 
-__declspec(dllexport) void ScriptEngineParse(char* str);
+__declspec(dllexport) PSYMBOL_BUFFER ScriptEngineParse(char* str);
 
 void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator);
 char HasTwoOperand(TOKEN Operator);
 
+#endif // !SCRIPT_ENGINE_H

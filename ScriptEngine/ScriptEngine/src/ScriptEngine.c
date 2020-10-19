@@ -11,7 +11,7 @@
 *
 *
 */
-void ScriptEngineParse(char *str)
+PSYMBOL_BUFFER ScriptEngineParse(char *str)
 {
     TOKEN_LIST Stack = NewTokenList();
     TOKEN_LIST MatchedStack = NewTokenList();
@@ -138,7 +138,7 @@ void ScriptEngineParse(char *str)
 
     } while (TopToken->Type != END_OF_STACK);
 
-    PrintTokenList(MatchedStack);
+    return CodeBuffer;
 }
 
 TOKEN NewTemp(void)
@@ -202,7 +202,7 @@ void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
     {
         Op1 = Pop(MatchedStack);
         Op1Symbol = ToSymbol(Op1);
-        PushSymbol(CodeBuffer, Op0Symbol);
+        PushSymbol(CodeBuffer, Op1Symbol);
 
 
         printf("%s\t%s,\t%s\n", Operator->Value, Op1->Value, Op0->Value);
@@ -273,10 +273,10 @@ void CodeGen(TOKEN_LIST MatchedStack, PSYMBOL_BUFFER CodeBuffer, TOKEN Operator)
 
 char HasTwoOperand(TOKEN Operator)
 {
-    unsigned int n = sizeof(OneOperandSemantics) / sizeof(char*);
+    unsigned int n = sizeof(OneOperandSemanticRules) / sizeof(char*);
     for (int i = 0; i < n; i++)
     {
-        if (!strcmp(Operator->Value, OneOperandSemantics[i]))
+        if (!strcmp(Operator->Value, OneOperandSemanticRules[i]))
         {
             return 0;
         }
@@ -522,11 +522,24 @@ unsigned long long int DecimalToInt(char *str)
 }
 unsigned long long int HexToInt(char *str)
 {
+    char temp;
     unsigned long long int acc = 0;
     for (int i = 0 ; i < strlen(str); i++)
     {
         acc <<= 4;
-        acc += (str[i] >= '0' && str[i] <= '9') ? str[i] - '0' : (str[i] >= 'a' && str[i] <= 'f') ? str[i] - 'a' : str[i] - 'A';
+        if (str[i] >= '0' && str[i] <= '9')
+        {
+            temp = str[i] - '0';
+        }
+        else if (str[i] >= 'a' && str[i] <= 'f')
+        {
+            temp = str[i] - 'a' + 10;
+        }
+        else
+        {
+            temp = str[i] - 'A' + 10;
+        }
+        acc += temp;
     }
     
     return acc;

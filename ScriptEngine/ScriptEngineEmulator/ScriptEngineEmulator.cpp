@@ -14,8 +14,25 @@
 
 using namespace std;
 
+typedef struct SYMBOL
+{
+    long long unsigned Type;
+    long long unsigned Value;
+}SYMBOL, * PSYMBOL;
+
+typedef struct SYMBOL_BUFFER
+{
+    PSYMBOL Head;
+    unsigned int Pointer;
+    unsigned int Size;
+
+}SYMBOL_BUFFER, * PSYMBOL_BUFFER;
+
 extern "C" {
-    __declspec(dllimport) void ScriptEngineParse(char* str);
+    __declspec(dllimport) PSYMBOL_BUFFER ScriptEngineParse(char* str);
+    __declspec(dllimport) void PrintSymbolBuffer(const PSYMBOL_BUFFER SymbolBuffer);
+    __declspec(dllimport) void PrintSymbol(PSYMBOL Symbol);
+
 }
 
 VOID TestParser(string Expr);
@@ -29,6 +46,39 @@ typedef unsigned long long QWORD;
 #define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
 #define LOBYTE(w) ((BYTE)(w))
 #define HIBYTE(w) ((BYTE)(((WORD)(w) >> 8) & 0xFF))
+
+
+#define FUNC_OR 0
+#define FUNC_XOR 1
+#define FUNC_AND 2
+#define FUNC_ASR 3
+#define FUNC_ASL 4
+#define FUNC_ADD 5
+#define FUNC_SUB 6
+#define FUNC_MUL 7
+#define FUNC_DIV 8
+#define FUNC_MOD 9
+#define FUNC_POI 10
+#define FUNC_DB 11
+#define FUNC_DD 12
+#define FUNC_DW 13
+#define FUNC_DQ 14
+#define FUNC_STR 15
+#define FUNC_WSTR 16
+#define FUNC_SIZEOF 17
+#define FUNC_NOT 18
+#define FUNC_NEG 19
+#define FUNC_HI 20
+#define FUNC_LOW 21
+#define FUNC_MOV 22
+
+
+#define SYMBOL_ID_TYPE  0
+#define SYMBOL_NUM_TYPE 1
+#define SYMBOL_REGISTER_TYPE 2
+#define SYMBOL_PSEUDO_REG_TYPE 3
+#define SYMBOL_SEMANTIC_RULE_TYPE 4
+#define SYMBOL_TEMP 5
 
 typedef struct _GUEST_REGS {
     ULONG64 rax; // 0x00
@@ -101,7 +151,42 @@ QWORD ScriptEngineKeywordDq(PUINT64 Address) {
     QWORD Result = *Address;
     return Result;
 }
+UINT64 GetValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
+{
+    switch (Symbol->Type)
+    {
+        case SYMBOL_ID_TYPE:
+        case SYMBOL_NUM_TYPE:
+        case SYMBOL_REGISTER_TYPE:
+        case SYMBOL_PSEUDO_REG_TYPE:
+        case SYMBOL_TEMP:
+    }
+}
 
+// 
+VOID ScriptEngineExecute(PGUEST_REGS GuestRegs, PSYMBOL_BUFFER CodeBuffer, int& Indx)
+{
+    PSYMBOL Operator;
+    PSYMBOL Src0;
+    PSYMBOL Src1;
+    PSYMBOL Des;
+    Operator = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
+    switch(Operator->Value)
+    {
+        case FUNC_OR:
+
+        case FUNC_XOR:
+
+        case FUNC_AND:
+        // ... 
+
+        case FUNC_ADD:
+
+        case FUNC_MOV:
+
+    }
+
+}
 //
 // test function
 //
@@ -111,10 +196,19 @@ VOID PerformAction(PGUEST_REGS GuestRegs, string Expr) {
     //
     // Test Parser
     //
-    ScriptEngineParse((char*)Expr.c_str());
-    /*for(token in buffer )
-        type = command.type 
-        value = command.value */
+    PSYMBOL_BUFFER CodeBuffer = ScriptEngineParse((char*)Expr.c_str());
+    
+    
+    //PrintSymbolBuffer(CodeBuffer);
+
+    for (int i = 0; i < CodeBuffer->Pointer; i++)
+    {
+        printf("%d\n", i);
+        
+   
+        ScriptEngineExecute(GuestRegs, CodeBuffer, i);
+    }
+    
 
         
     
@@ -160,9 +254,9 @@ VOID TestParser(string Expr) {
 
 int main() 
 {
-    // string str = "x = poi(0n100); ";
+    string str = "x = poi(ee43); ";
     // string str = "SINA=dw(1+(1*5)+(34*34)|7*(99^34) ) ; \n x = str(dq(dw( dd(db(poi(wstr(34)&sizeof(1)>>not(2)<<neg(3)+hi(4)-low(5)*6/7%8)))))); \n";
-    string str = "x1 = poi(poi((poi(($proc&neg(1000`0000))+10)^poi (poi(poi(poi(poi(poi(poi(poi($prcb+18)+220)+648)+8)-240)+2a0)))^neg(0n6708588087252463955)^($proc&neg(100000)))-D8)-1080); ";
+    // string str = "x1 = poi(poi((poi(($proc&neg(1000`0000))+10)^poi (poi(poi(poi(poi(poi(poi(poi($prcb+18)+220)+648)+8)-240)+2a0)))^neg(0n6708588087252463955)^($proc&neg(100000)))-D8)-1080); ";
     TestParser(str.c_str());
     return 0;
 }

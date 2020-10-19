@@ -4,6 +4,23 @@
 #include <stdint.h>
 #include <string.h>
 
+const char* KeywordList[] =
+{
+    "str",
+    "low",
+    "poi",
+    "db",
+    "dq",
+    "dw",
+    "not",
+    "dd",
+    "func",
+    "wstr",
+    "sizeof",
+    "neg",
+    "hi"
+};
+
 /**
  * 
  */
@@ -540,6 +557,15 @@ TOKEN GetToken(char *c, char* str)
                     Append(Token, *c);
                 *c = sgetc(str);
             } while (IsHex(*c) || *c == '`');
+            int n = sizeof(KeywordList) / sizeof(char*);
+            for (int i = 0; i < n; i++)
+            {
+                if (!strcmp(Token->Value, KeywordList[i]))
+                {
+                    Token->Type = KEYWORD;
+                    return Token;
+                }
+            }
             Token->Type = HEX;
             return Token;
         }
