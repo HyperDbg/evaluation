@@ -172,16 +172,18 @@ UINT64 GetRegValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
 }
 UINT64 GetValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
 {
-    UINT64 x = 0;
-   /* switch (Symbol->Type)
+
+    switch (Symbol->Type)
     {
         case SYMBOL_ID_TYPE:
         case SYMBOL_NUM_TYPE:
+            return Symbol->Value;
         case SYMBOL_REGISTER_TYPE:
         case SYMBOL_PSEUDO_REG_TYPE:
         case SYMBOL_TEMP:
-    }*/
-    return x;
+            return Symbol->Value;
+    }
+
 }
 
 

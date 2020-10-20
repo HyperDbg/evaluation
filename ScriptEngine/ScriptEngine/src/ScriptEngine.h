@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "scanner.h"
 
- #define _SCRIPT_ENGINE_DBG_EN
+ //#define _SCRIPT_ENGINE_DBG_EN
 
 #define SYMBOL_ID_TYPE  0
 #define SYMBOL_NUM_TYPE 1
