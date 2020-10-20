@@ -495,7 +495,7 @@ PSYMBOL ToSymbol(TOKEN Token)
         return Symbol;
     case TEMP:
         Symbol->Value = DecimalToInt(Token->Value); // TODO: Convert String to int
-        SetType(&Symbol->Type, SYMBOL_TEMP);
+        SetType(&Symbol->Type, SYMBOL_TEMP_TYPE);
         return Symbol;
 
     default:

@@ -82,11 +82,18 @@ typedef unsigned long long QWORD;
 #define SYMBOL_REGISTER_TYPE 2
 #define SYMBOL_PSEUDO_REG_TYPE 3
 #define SYMBOL_SEMANTIC_RULE_TYPE 4
-#define SYMBOL_TEMP 5
+#define SYMBOL_TEMP_TYPE 5
 
 
 #define R10_MNEMONIC 0
 #define RCX_MNEMONIC 16
+
+#define MAX_TEMP_COUNT 32
+
+// TODO: Extract number of variables from input of ScriptEngine
+// and allocate variableList Dynamically.
+#define MAX_VAR_COUNT 32
+
 
 typedef struct _GUEST_REGS {
     ULONG64 rax; // 0x00
@@ -106,6 +113,9 @@ typedef struct _GUEST_REGS {
     ULONG64 r14; // 0x70
     ULONG64 r15; // 0x78
 } GUEST_REGS, * PGUEST_REGS;
+
+UINT64 TempList[MAX_TEMP_COUNT] = { 0 };
+UINT64 VariableList[MAX_VAR_COUNT] = { 0 };
 
 //
 // Pseudo registers
@@ -159,6 +169,8 @@ QWORD ScriptEngineKeywordDq(PUINT64 Address) {
     QWORD Result = *Address;
     return Result;
 }
+
+
 UINT64 GetRegValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
 {
     switch (Symbol->Value)
@@ -170,20 +182,39 @@ UINT64 GetRegValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
         // TODO: Add all the register
     }
 }
+UINT64 GetPseudoRegValue(PSYMBOL Symbol)
+{
+    // TODO: Implement for pseudoregs 
+    return (UINT64)0;
+}
 UINT64 GetValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
 {
 
     switch (Symbol->Type)
     {
         case SYMBOL_ID_TYPE:
+            return VariableList[Symbol->Value];
         case SYMBOL_NUM_TYPE:
             return Symbol->Value;
         case SYMBOL_REGISTER_TYPE:
+            return GetRegValue(GuestRegs, Symbol);
         case SYMBOL_PSEUDO_REG_TYPE:
-        case SYMBOL_TEMP:
-            return Symbol->Value;
+            return GetPseudoRegValue(Symbol);
+        case SYMBOL_TEMP_TYPE:
+            return TempList[Symbol->Value];
     }
-
+}
+VOID SetValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol, UINT64 Value)
+{
+    switch (Symbol->Type)
+    {
+        case SYMBOL_ID_TYPE:
+            VariableList[Symbol->Value] = Value;
+            return;
+        case SYMBOL_TEMP_TYPE:
+            TempList[Symbol->Value] = Value;
+            return;
+    }
 }
 
 
@@ -194,21 +225,65 @@ VOID ScriptEngineExecute(PGUEST_REGS GuestRegs, PSYMBOL_BUFFER CodeBuffer, int& 
     PSYMBOL Src0;
     PSYMBOL Src1;
     PSYMBOL Des;
+    UINT64  SrcVal0;
+    UINT64  SrcVal1;
+    UINT64 DesVal;
+
+
     Operator = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
-    //switch(Operator->Value)
-    //{
-    //    case FUNC_OR:
+    Indx++;
+    if (Operator->Type != SYMBOL_SEMANTIC_RULE_TYPE)
+    {
+        printf("Error:Expecting Operator Type.\n");
+    }
+    
+    Src0 = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
+    Indx++;
+    SrcVal0 = GetValue(GuestRegs, Src0);
+    switch(Operator->Value)
+    {
+        case FUNC_OR:
+            Src1 = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
+            Indx++;
 
-    //    case FUNC_XOR:
+            SrcVal1 = GetValue(GuestRegs, Src1);
 
-    //    case FUNC_AND:
-    //    // ... 
+            Des = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
+            Indx++;
+            
+            
+            DesVal = SrcVal0 | SrcVal1;
+            SetValue(GuestRegs, Des, DesVal);
+            printf("DesVal = %d\n", DesVal);
+                
+            return;
+            
+        case FUNC_XOR:
 
-    //    case FUNC_ADD:
+        case FUNC_AND:
+        // ... 
+            return;
+        case FUNC_ADD:
+            Src1 = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
+            Indx++;
+            SrcVal1 = GetValue(GuestRegs, Src1);
 
-    //    case FUNC_MOV:
+            Des = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
+            Indx++;
 
-    //}
+            
+
+            DesVal = SrcVal0 + SrcVal1;
+            SetValue(GuestRegs, Des, DesVal);
+            printf("DesVal = %d\n", DesVal);
+
+            return;
+
+        case FUNC_MOV:
+            printf("This Operator is not handled yet!\n");
+            return;
+
+    }
 
 }
 //
@@ -225,7 +300,7 @@ VOID PerformAction(PGUEST_REGS GuestRegs, string Expr) {
     
     //PrintSymbolBuffer(CodeBuffer);
 
-    for (int i = 0; i < CodeBuffer->Pointer; i++)
+    for (int i = 0; i < CodeBuffer->Pointer;)
     {
         printf("%d\n", i);
         
@@ -278,7 +353,7 @@ VOID TestParser(string Expr) {
 
 int main() 
 {
-    string str = "x = poi(ee43); ";
+    string str = "x = 1 + 3; ";
     // string str = "SINA=dw(1+(1*5)+(34*34)|7*(99^34) ) ; \n x = str(dq(dw( dd(db(poi(wstr(34)&sizeof(1)>>not(2)<<neg(3)+hi(4)-low(5)*6/7%8)))))); \n";
     // string str = "x1 = poi(poi((poi(($proc&neg(1000`0000))+10)^poi (poi(poi(poi(poi(poi(poi(poi($prcb+18)+220)+648)+8)-240)+2a0)))^neg(0n6708588087252463955)^($proc&neg(100000)))-D8)-1080); ";
     TestParser(str.c_str());
