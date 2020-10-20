@@ -9,6 +9,10 @@
  * @copyright This project is released under the GNU Public License v3.
  *
  */
+
+// TODO: Implementation of GetIDValue 
+// TODO: Implementation of SetTempValue 
+// TODO: Implementation of GetTempValue
 #include <string>
 #include <Windows.h>
 
@@ -79,6 +83,10 @@ typedef unsigned long long QWORD;
 #define SYMBOL_PSEUDO_REG_TYPE 3
 #define SYMBOL_SEMANTIC_RULE_TYPE 4
 #define SYMBOL_TEMP 5
+
+
+#define R10_MNEMONIC 0
+#define RCX_MNEMONIC 16
 
 typedef struct _GUEST_REGS {
     ULONG64 rax; // 0x00
@@ -151,17 +159,31 @@ QWORD ScriptEngineKeywordDq(PUINT64 Address) {
     QWORD Result = *Address;
     return Result;
 }
+UINT64 GetRegValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
+{
+    switch (Symbol->Value)
+    {
+        case R10_MNEMONIC: 
+            return GuestRegs->r10;
+        case RCX_MNEMONIC:
+            return GuestRegs->rcx;
+        // TODO: Add all the register
+    }
+}
 UINT64 GetValue(PGUEST_REGS GuestRegs, PSYMBOL Symbol)
 {
-    switch (Symbol->Type)
+    UINT64 x = 0;
+   /* switch (Symbol->Type)
     {
         case SYMBOL_ID_TYPE:
         case SYMBOL_NUM_TYPE:
         case SYMBOL_REGISTER_TYPE:
         case SYMBOL_PSEUDO_REG_TYPE:
         case SYMBOL_TEMP:
-    }
+    }*/
+    return x;
 }
+
 
 // 
 VOID ScriptEngineExecute(PGUEST_REGS GuestRegs, PSYMBOL_BUFFER CodeBuffer, int& Indx)
@@ -171,20 +193,20 @@ VOID ScriptEngineExecute(PGUEST_REGS GuestRegs, PSYMBOL_BUFFER CodeBuffer, int& 
     PSYMBOL Src1;
     PSYMBOL Des;
     Operator = (PSYMBOL)((unsigned long long)CodeBuffer->Head + (unsigned long long)(Indx * sizeof(SYMBOL)));
-    switch(Operator->Value)
-    {
-        case FUNC_OR:
+    //switch(Operator->Value)
+    //{
+    //    case FUNC_OR:
 
-        case FUNC_XOR:
+    //    case FUNC_XOR:
 
-        case FUNC_AND:
-        // ... 
+    //    case FUNC_AND:
+    //    // ... 
 
-        case FUNC_ADD:
+    //    case FUNC_ADD:
 
-        case FUNC_MOV:
+    //    case FUNC_MOV:
 
-    }
+    //}
 
 }
 //

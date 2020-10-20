@@ -456,7 +456,6 @@ void PrintSymbol(PSYMBOL Symbol)
 
 PSYMBOL ToSymbol(TOKEN Token)
 {
-    static unsigned int IdCounter = 0;
     PSYMBOL Symbol = NewSymbol();
     switch (Token->Type)
     {
@@ -572,9 +571,9 @@ unsigned long long int RegisterToInt(char *str)
     {
         return RCX_MNEMONIC;
     }
-    else if (!strcmp(str, "r0"))
+    else if (!strcmp(str, "r10"))
     {
-        return R0_MNEMONIC;
+        return R10_MNEMONIC;
     }
     // ...
     // TODO: Handle all Registers

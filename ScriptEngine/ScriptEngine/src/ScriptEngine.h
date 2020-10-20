@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "scanner.h"
 
-// #define _SCRIPT_ENGINE_DBG_EN
+ #define _SCRIPT_ENGINE_DBG_EN
 
 #define SYMBOL_ID_TYPE  0
 #define SYMBOL_NUM_TYPE 1
@@ -15,7 +15,7 @@
 #define SYMBOL_TEMP 5
 
 
-#define R0_MNEMONIC 0
+#define R10_MNEMONIC 0
 #define RCX_MNEMONIC 16
 
 #define INVALID -1
@@ -77,11 +77,13 @@ typedef struct SYMBOL_BUFFER
 	PSYMBOL Head;
 	unsigned int Pointer;
 	unsigned int Size;
+	unsigned int IdsCount;
 
 }SYMBOL_BUFFER, * PSYMBOL_BUFFER;
 
 
 char TempMap[MAX_TEMP_COUNT] = { 0 };
+unsigned int IdCounter = 0;
 
 
 char IsNoneTerminal(TOKEN Token);
